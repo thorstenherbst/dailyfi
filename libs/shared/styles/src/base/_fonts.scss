@@ -1,0 +1,40 @@
+// Schriften selbst gehostet (keine Anfrage an Google, DSGVO — LG Muenchen I,
+// 3 O 17493/20). Quelle: @fontsource/inter und @fontsource/jetbrains-mono,
+// nur die verwendeten Gewichte, Subset `latin` (enthaelt Ä Ö Ü ä ö ü ß €).
+// Angular kopiert die woff2-Dateien beim Build nach `media/`.
+
+@use 'sass:map';
+
+$faces: (
+  'Inter': (
+    package: 'inter',
+    weights: (
+      400,
+      500,
+      600,
+      700,
+    ),
+  ),
+  'JetBrains Mono': (
+    package: 'jetbrains-mono',
+    weights: (
+      400,
+      500,
+      600,
+    ),
+  ),
+);
+
+@each $family, $face in $faces {
+  $package: map.get($face, package);
+  @each $weight in map.get($face, weights) {
+    @font-face {
+      font-family: $family;
+      font-style: normal;
+      font-weight: $weight;
+      font-display: swap;
+      src: url('@fontsource/#{$package}/files/#{$package}-latin-#{$weight}-normal.woff2')
+        format('woff2');
+    }
+  }
+}

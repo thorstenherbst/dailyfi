@@ -1,0 +1,151 @@
+<p class="sr-only" role="status" aria-live="polite">{{ announcement() }}</p>
+
+<header class="pagehead">
+  <app-wordmark />
+  <h1 class="pagehead-title" tabindex="-1">Reports</h1>
+
+  <div class="toolbar">
+    <button
+      class="btn btn-icon btn-sm"
+      type="button"
+      (click)="onPreviousMonth()"
+      aria-label="Vorheriger Monat"
+    >
+      <app-icon name="left" />
+    </button>
+
+    <!-- Brief: „‹ Oktober 2026 ›". Der Wechsel wird zusaetzlich ueber die
+         Live-Region oben angesagt. -->
+    <span class="month" id="report-month">{{ formatMonth(store.month()) }}</span>
+
+    <!-- aria-disabled statt disabled: Wer mit „Nächster Monat" im laufenden
+         Monat ankommt, behaelt den Fokus; der Klick wird im Handler ignoriert. -->
+    <button
+      class="btn btn-icon btn-sm"
+      type="button"
+      [attr.aria-disabled]="store.isCurrentMonth() ? 'true' : null"
+      (click)="onNextMonth()"
+      aria-label="Nächster Monat"
+    >
+      <app-icon name="right" />
+    </button>
+  </div>
+
+  <span class="pagehead-spacer"></span>
+
+  <button
+    class="btn btn-secondary btn-sm"
+    type="button"
+    [disabled]="store.report().entryCount === 0"
+    (click)="onExport()"
+  >
+    <app-icon name="download" />
+    CSV exportieren
+  </button>
+</header>
+
+<div class="container stack">
+  @if (store.report().hasRateGap) {
+    <!-- Nicht stillschweigend mit 0 € rechnen: das wäre die gefährlichste
+       Variante, weil die Summe dann plausibel aussieht. -->
+    <p class="notice notice-warning note" role="note">
+      <app-icon class="notice-icon" name="info" />
+      <span class="notice-text">
+        Für {{ store.report().projectsWithoutRate.join(', ') }} ist kein Stundensatz hinterlegt. Die
+        Stunden stimmen, die Beträge sind unvollständig.
+      </span>
+    </p>
+  }
+
+  @if (store.loadError(); as reason) {
+    <!-- Nie „keine Zeiten erfasst", wenn gar nicht geladen werden konnte. -->
+    <app-load-error
+      [title]="formatMonth(store.month()) + ' konnte nicht geladen werden.'"
+      [detail]="reason"
+      [busy]="store.loading()"
+      (retry)="onRetryLoad()"
+    />
+  } @else if (store.loading()) {
+    <p class="empty">Wird geladen …</p>
+  } @else if (store.report().entryCount === 0) {
+    <p class="empty">Für {{ formatMonth(store.month()) }} sind keine Zeiten erfasst.</p>
+  } @else {
+    <div class="card">
+      <table class="table">
+        <caption class="sr-only">
+          Stunden und Beträge für
+          {{
+            formatMonth(store.month())
+          }}, nach Kunde und Projekt
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Kunde / Projekt</th>
+            <th scope="col" class="num">Stunden</th>
+            <th scope="col" class="num">Satz</th>
+            <th scope="col" class="num">Betrag</th>
+          </tr>
+        </thead>
+
+        @for (client of store.report().clients; track client.clientId) {
+          <tbody>
+            <tr class="client-row group-row">
+              <th scope="rowgroup">
+                {{ client.clientName }}
+                @if (client.archived) {
+                  <span class="tag">archiviert</span>
+                }
+              </th>
+              <td class="num mono">{{ formatHours(client.hours) }}</td>
+              <td></td>
+              <!-- Der Stern muss am Betrag kleben: „945,00 €*", nicht „945,00 € *".
+               Prettier bricht die Zeile sonst um und macht aus dem Umbruch ein
+               Leerzeichen. Daher die unschöne Schreibweise und das Ignorieren
+               darunter — das muss der Kommentar direkt über dem Element sein. -->
+              <!-- prettier-ignore -->
+              <td class="num mono">
+            {{ formatAmount(client.amount) }}@if (client.hasRateGap) {<span
+                class="gap"
+                title="unvollständig"
+                >*</span
+              >}
+          </td>
+            </tr>
+
+            @for (project of client.projects; track project.projectId) {
+              <tr>
+                <td class="project">
+                  {{ project.projectName }}
+                  @if (project.archived) {
+                    <span class="tag">archiviert</span>
+                  }
+                  <span class="count">{{ project.entryCount }}×</span>
+                </td>
+                <td class="num mono">{{ formatHours(project.hours) }}</td>
+                <td class="num mono">
+                  {{ project.hourlyRate === null ? '—' : formatAmount(project.hourlyRate) }}
+                </td>
+                <td class="num mono">
+                  {{ project.amount === null ? '—' : formatAmount(project.amount) }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        }
+
+        <tfoot>
+          <tr>
+            <th scope="row">Summe {{ monthName() }}</th>
+            <td class="num mono">{{ formatHours(store.report().hours) }}</td>
+            <td></td>
+            <td class="num mono">{{ formatAmount(store.report().amount) }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    @if (store.report().hasRateGap) {
+      <p class="footnote">* Betrag unvollständig: mindestens ein Projekt ohne Stundensatz.</p>
+    }
+  }
+</div>

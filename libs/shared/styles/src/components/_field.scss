@@ -1,0 +1,97 @@
+@use '../abstracts' as *;
+
+// Feld-Gruppe: Label ueber dem Eingabeelement.
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  display: block;
+  font-size: font-size(sm);
+  font-weight: font-weight(semibold);
+}
+
+// Eingabe, Auswahl, Textfeld: surface-raised, Rand border-strong, Radius 10.
+.input {
+  min-height: size(control-h);
+  width: 100%;
+  padding: 0 space(3);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: radius(md);
+  color: var(--text);
+  font-size: font-size(md);
+
+  &::placeholder {
+    color: var(--text-muted);
+    opacity: 1;
+  }
+
+  &:hover {
+    border-color: var(--text-muted);
+  }
+
+  &:focus-visible {
+    @include focus-ring(1px);
+    border-color: var(--focus);
+  }
+
+  // Fehler: 2 px Rand PLUS Symbol und Text darunter (.form-error).
+  &[aria-invalid='true'] {
+    border-color: var(--danger);
+    border-width: 2px;
+    padding-left: calc(#{space(3)} - 1px);
+  }
+
+  &:disabled {
+    background: var(--surface-sunken);
+    border-color: var(--border);
+    color: var(--text-muted);
+  }
+
+  &.mono {
+    @include mono;
+  }
+}
+
+textarea.input {
+  min-height: 96px;
+  padding: space(2) space(3);
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.hint {
+  font-size: font-size(sm);
+  color: var(--text-muted);
+}
+
+// Fehler als Text, mit Symbol — Farbe ist nie die einzige Information.
+.form-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--danger);
+  font-size: font-size(sm);
+  font-weight: font-weight(semibold);
+}
+
+// Kontrollkaestchen mit Beschriftung, mindestens 24 px Zielhoehe.
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: space(2);
+  min-height: 32px;
+  font-size: font-size(sm);
+  color: var(--text-muted);
+  cursor: pointer;
+
+  input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--primary);
+  }
+}

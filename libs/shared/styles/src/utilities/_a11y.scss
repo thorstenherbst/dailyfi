@@ -1,0 +1,38 @@
+@use '../abstracts' as *;
+
+.sr-only {
+  @include visually-hidden;
+}
+
+// Sprunglink: unsichtbar, bis er den Fokus bekommt.
+.skip-link {
+  @include visually-hidden;
+
+  &:focus,
+  &:focus-visible {
+    position: fixed;
+    top: space(4);
+    left: space(4);
+    z-index: z(skip-link);
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: space(2) space(4);
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+    border-radius: radius(md);
+    background: var(--surface-raised);
+    color: var(--text);
+    box-shadow: var(--shadow);
+    font-weight: font-weight(semibold);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}

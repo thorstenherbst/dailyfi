@@ -1,0 +1,56 @@
+@use '../abstracts' as *;
+
+// Tabelle nach Brief: Kopf sunken 40 px, Zeilen 48 px, Zahlen Mono rechts,
+// Kundenzeilen fett, Summenzeile mit 2-px-Linie oben.
+.table {
+  width: 100%;
+  font-size: font-size(md);
+
+  th,
+  td {
+    height: 48px;
+    padding: 0 space(4);
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  thead th {
+    height: 40px;
+    background: var(--surface-sunken);
+    color: var(--text-muted);
+    font-size: font-size(sm);
+    font-weight: font-weight(semibold);
+  }
+
+  .num {
+    @include mono;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .group-row > * {
+    height: 44px;
+    background: var(--surface);
+    font-weight: font-weight(bold);
+  }
+
+  tbody tr:not(.group-row):hover > * {
+    background: var(--hover-bg);
+  }
+
+  tfoot > tr > * {
+    height: 52px;
+    border-top: 2px solid var(--border-strong);
+    border-bottom: 0;
+    background: var(--surface-sunken);
+    font-weight: font-weight(bold);
+  }
+}
+
+// Rahmen um eine Tabelle oder Liste.
+.card {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: radius(lg);
+  overflow: hidden;
+}

@@ -1,0 +1,59 @@
+@use '../abstracts' as *;
+
+// Tooltip zu Icon-Buttons (Direktive `appTooltip` in shared/ui; sie setzt
+// `.tooltip-on`). Farben wie der Toast: hell auf Aubergine, im Dunkelmodus
+// Kreide — Kontrast 15,6 bzw. 14,7.
+//
+// Er darf nie ein anderes Bedienelement verdecken — ein Klick dort traefe
+// sonst den Tooltip, also das falsche Element. `pointer-events: none` ist keine
+// Loesung: dann liesse er sich nicht mehr ueberfahren (WCAG 1.4.13).
+[data-tooltip] {
+  position: relative;
+
+  &::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    right: 0;
+    bottom: 100%;
+    z-index: z(block-focus);
+    padding: space(1) space(2);
+    // Transparenter Rand zum Element hin: keine Luecke, der Zeiger kann
+    // hinueberwechseln.
+    border-bottom: 6px solid transparent;
+    border-radius: radius(sm);
+    background: var(--toast-bg) padding-box;
+    color: var(--toast-text);
+    font-size: font-size(xs);
+    font-weight: font-weight(semibold);
+    line-height: 1.4;
+    white-space: nowrap;
+    visibility: hidden;
+  }
+
+  &.tooltip-on::after {
+    visibility: visible;
+  }
+}
+
+// In einer Gruppe von Icon-Buttons (Aktionsspalte einer Tabelle): links neben
+// der **ganzen** Gruppe, auf Hoehe der eigenen Zeile. Ueber dem Element laege
+// er auf den Knoepfen der Zeile darueber, links neben dem eigenen Knopf auf dem
+// Nachbarknopf. Links der Gruppe steht nur Text (Satz, Name). Der transparente
+// Rand rechts reicht bis an die Gruppe heran; vom zweiten Knopf aus fuehrt der
+// Weg um den ersten herum (die Direktive laesst ihn dafuer kurz stehen).
+.tooltip-group {
+  position: relative;
+
+  [data-tooltip] {
+    position: static;
+  }
+
+  [data-tooltip]::after {
+    top: 50%;
+    right: calc(100% - var(--tooltip-group-inset, 0px));
+    bottom: auto;
+    border-bottom: 0;
+    border-right: var(--tooltip-group-inset, 0px) solid transparent;
+    transform: translateY(-50%);
+  }
+}

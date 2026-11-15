@@ -1,0 +1,235 @@
+@use 'abstracts' as *;
+
+// Die Woche fuellt den Platz zwischen Seitenoberkante und Statusleiste; nur
+// das Raster scrollt. Zwei Spalten: links Kopf + Raster, rechts das Panel
+// (Breite --panel-w, components/_panel.scss). Das Panel ueberdeckt nichts.
+//
+// Ab 1024 px muessen sieben Tage plus Panel passen: 1024 − 300 (Panel unter
+// 1280) − 72 (Achse) = 652 px, also 93 px je Tag. Mit 340 px blieben 87 px.
+:host {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--panel-w);
+  height: calc(100dvh - #{layout(status-h)});
+}
+
+.week-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.pagehead,
+.notice {
+  flex: none;
+}
+
+.toolbar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: space(2);
+}
+
+// Der Kopf teilt sich die Breite mit dem Panel und bleibt einzeilig:
+// - unter 1536 px „Zeit eintragen" nur als Symbol (Name bleibt fuer
+//   Screenreader),
+// - unter 1280 px zusaetzlich ohne Wochensumme (steht immer in der
+//   Statusleiste) und mit engeren Abstaenden. Notfalls kuerzt der Titel die
+//   KW-Zeile mit Auslassung, statt ueber das Panel zu laufen.
+@include below(2xl) {
+  .wide-label {
+    @include visually-hidden;
+  }
+}
+
+@include below(xl) {
+  .pagehead {
+    gap: space(2);
+  }
+
+  .pagehead-sum {
+    display: none;
+  }
+}
+
+.pagehead-title {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.pagehead-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notice {
+  margin: space(3) space(5) 0;
+}
+
+.week-load-error {
+  flex: none;
+  margin: space(5);
+}
+
+// -- Raster ---------------------------------------------------------------
+
+.week {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--grid-bg);
+
+  &.is-dragging {
+    user-select: none;
+    cursor: grabbing;
+  }
+}
+
+.week-head,
+.week-body {
+  display: grid;
+  grid-template-columns: var(--axis-w) repeat(7, minmax(0, 1fr));
+}
+
+.week-head {
+  border-bottom: 1px solid var(--border);
+}
+
+.axis-head {
+  border-right: 1px solid var(--border);
+}
+
+.day-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px space(2);
+  min-height: 56px;
+  padding: space(2) space(2) space(2) space(3);
+  border-left: 1px solid var(--border);
+
+  &:nth-child(2) {
+    border-left: 0;
+  }
+
+  // Heute: gefuellter Kopf mit dem Wort „Heute" — kein roter Kreis.
+  &.is-today {
+    margin: space(1);
+    border-left-color: transparent;
+    border-radius: radius(md);
+    background: var(--today-bg);
+    color: var(--today-text);
+
+    .day-name,
+    .day-sum {
+      color: var(--today-text);
+    }
+  }
+}
+
+.day-name {
+  color: var(--text-muted);
+  font-size: font-size(sm);
+  font-weight: font-weight(medium);
+}
+
+.day-date {
+  font-size: font-size(lg);
+  font-weight: font-weight(semibold);
+}
+
+.day-sum {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: font-size(xs);
+}
+
+.today-tag {
+  order: 9;
+  flex-basis: 100%;
+  font-size: font-size(xs);
+  font-weight: font-weight(bold);
+  letter-spacing: 0.05em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+// Oben Luft, damit „00:00" und das Label beim Anfangs-Scroll (07:00) nicht
+// unter dem Tageskopf abgeschnitten werden. Unten so viel Auslauf, dass die
+// letzte Stunde ueber dem Menue-Ausloeser (unten links) lesbar wird.
+.week-scroll {
+  flex: 1;
+  min-height: 0;
+  padding: space(3) 0 calc(#{size(fab-size)} + #{size(fab-inset)} * 2);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+// Uhrzeit mittig auf der Stundenlinie.
+.axis {
+  border-right: 1px solid var(--border);
+
+  > div {
+    position: relative;
+  }
+
+  span {
+    position: absolute;
+    top: 0;
+    right: space(2);
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: font-size(xs);
+  }
+}
+
+// Stundenlinien als Hintergrund: eine Linie je --hour-h (aus $layout).
+.col {
+  position: relative;
+  // Schmale Tagesspalten (1024 px plus Panel: ~93 px) verdichten die Bloecke
+  // (components/_time-block.scss).
+  container: day / inline-size;
+  border-left: 1px solid var(--border);
+  background-image: linear-gradient(var(--border) 1px, transparent 1px);
+  background-size: 100% var(--hour-h);
+  cursor: crosshair;
+
+  &:nth-child(2) {
+    border-left: 0;
+  }
+
+  &.is-weekend {
+    background-color: var(--surface-sunken);
+  }
+
+  &.is-today {
+    background-color: var(--today-col);
+  }
+}
+
+// Zeitbloecke, Griffe und Entwurf: components/_time-block.scss (Brief
+// „Zeitblock"; ausgelagert, damit diese Datei im 4-kB-Budget bleibt).
+
+// -- Unter 1024 px: Hinweis statt Raster ----------------------------------
+
+.narrow-hint {
+  display: none;
+  margin: space(5);
+}
+
+@include below(lg) {
+  :host {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .week,
+  .week-panel {
+    display: none;
+  }
+
+  .narrow-hint {
+    display: flex;
+  }
+}

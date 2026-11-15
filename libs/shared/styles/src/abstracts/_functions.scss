@@ -1,0 +1,58 @@
+@use 'sass:map';
+@use 'sass:meta';
+@use 'tokens';
+
+// Gemeinsamer Zugriff mit klarer Fehlermeldung statt stillem `null`.
+@function token($map, $key, $name) {
+  @if not map.has-key($map, $key) {
+    @error 'Unbekanntes Token #{$name}(#{meta.inspect($key)}). Bekannt: #{map.keys($map)}';
+  }
+  @return map.get($map, $key);
+}
+
+/// space(4) → 16px
+@function space($key) {
+  @return token(tokens.$space, $key, 'space');
+}
+
+/// font-size(md) → 15px
+@function font-size($key) {
+  @return token(tokens.$font-size, $key, 'font-size');
+}
+
+@function font-weight($key) {
+  @return token(tokens.$font-weight, $key, 'font-weight');
+}
+
+@function line-height($key) {
+  @return token(tokens.$line-height, $key, 'line-height');
+}
+
+@function font-family($key) {
+  @return token(tokens.$font-family, $key, 'font-family');
+}
+
+@function radius($key) {
+  @return token(tokens.$radius, $key, 'radius');
+}
+
+@function bp($key) {
+  @return token(tokens.$breakpoints, $key, 'bp');
+}
+
+/// z(toast) → 40
+@function z($key) {
+  @return token(tokens.$z, $key, 'z');
+}
+
+@function dur($key) {
+  @return token(tokens.$duration, $key, 'dur');
+}
+
+@function size($key) {
+  @return token(tokens.$size, $key, 'size');
+}
+
+@function layout($key) {
+  @return token(tokens.$layout, $key, 'layout');
+}

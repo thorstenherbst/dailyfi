@@ -1,0 +1,100 @@
+@use 'abstracts' as *;
+
+:host {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: z(status);
+  display: flex;
+  align-items: center;
+  gap: space(4);
+  height: layout(status-h);
+  padding: 0 space(4);
+  border-top: 1px solid var(--border);
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  font-size: font-size(xs);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+// Nichts schrumpft ausser der E-Mail: Sync, KW, Summen und „Abmelden" bleiben
+// immer ganz. Wird es eng, fallen Kuerzel stufenweise weg (unten).
+:host > * {
+  flex-shrink: 0;
+}
+
+b {
+  color: var(--text);
+  font-weight: font-weight(semibold);
+}
+
+.sync {
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+  font-weight: font-weight(semibold);
+  --icon-size: 14px;
+
+  &.is-synced {
+    color: var(--success);
+  }
+
+  &.is-error {
+    color: var(--danger);
+  }
+}
+
+.shortcuts {
+  display: inline-flex;
+  align-items: center;
+  gap: space(2);
+}
+
+.shortcut {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.shortcut + .shortcut::before {
+  content: '·' / '';
+  margin-right: space(2);
+}
+
+.kbd {
+  font-size: 10px;
+  line-height: 15px;
+}
+
+.right {
+  display: flex;
+  flex-shrink: 1;
+  align-items: center;
+  gap: space(3);
+  min-width: 0;
+  margin-left: auto;
+}
+
+.email {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-link {
+  flex-shrink: 0;
+  font-size: font-size(xs);
+}
+
+// Kuerzel stufenweise: unter 1280 px nur die ersten drei, unter 1024 px keine.
+@include below(xl) {
+  .shortcut:nth-child(n + 4) {
+    display: none;
+  }
+}
+
+@include below(lg) {
+  .shortcuts {
+    display: none;
+  }
+}

@@ -1,0 +1,147 @@
+<!-- Jede Aenderung meldet ein Toast (Live-Region der App-Shell). -->
+<header class="pagehead">
+  <app-wordmark />
+  <h1 class="pagehead-title" tabindex="-1">
+    Projekte
+    <span class="pagehead-sub">
+      {{ store.activeProjectCount() }}
+      {{ store.activeProjectCount() === 1 ? 'aktives Projekt' : 'aktive Projekte' }}
+    </span>
+  </h1>
+
+  <span class="pagehead-spacer"></span>
+
+  <div class="toolbar">
+    <label class="check filter">
+      <input
+        type="checkbox"
+        [checked]="store.showArchived()"
+        (change)="onToggleArchived($event)"
+      />
+      Archivierte zeigen
+    </label>
+
+    <button class="btn btn-secondary btn-sm" type="button" (click)="onAddClient()">
+      <app-icon name="plus" />
+      Kunde<span class="sr-only"> anlegen</span>
+    </button>
+  </div>
+</header>
+
+<div class="container stack">
+  @if (store.loadError(); as reason) {
+    <!-- Statt „Noch keine Kunden", das hier nicht stimmen muesste. -->
+    <app-load-error
+      title="Kunden und Projekte konnten nicht geladen werden."
+      [detail]="reason"
+      [busy]="store.loading()"
+      (retry)="onRetryLoad()"
+    />
+  } @else if (store.loading()) {
+    <p class="empty">Wird geladen …</p>
+  } @else {
+    @if (store.groups().length === 0) {
+      <div class="empty">
+        <p>Noch keine Kunden.</p>
+        <p class="hint">
+          Ein Kunde zuerst, dann seine Projekte — im Wochenraster wählst du danach das Projekt.
+        </p>
+      </div>
+    }
+
+    <!-- Echte Tabelle: Spaltenkoepfe fuer die Anzeige, je Kunde ein <tbody>
+         mit Kopfzeile (scope="rowgroup"), Projekte als Zeilen (scope="row").
+         Bearbeitet wird in der Zeile; die Felder haben dort eigene Labels. -->
+    <div class="card">
+      <table class="table projects-table">
+        <caption class="sr-only">
+          Kunden und ihre Projekte
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Projekt</th>
+            <th scope="col">Farbe</th>
+            <th scope="col" class="num">Stundensatz</th>
+            <th scope="col"><span class="sr-only">Aktionen</span></th>
+          </tr>
+        </thead>
+
+        @for (group of store.groups(); track group.client.id) {
+          <tbody>
+            <tr
+              app-client-row
+              [client]="group.client"
+              [editor]="stateFor({ kind: 'client', id: group.client.id })"
+              (edit)="onEdit({ kind: 'client', id: group.client.id })"
+              (archive)="onArchive({ kind: 'client', id: group.client.id }, $event)"
+              (restore)="onRestore({ kind: 'client', id: group.client.id }, $event)"
+              (editorEvent)="onEditorEvent({ kind: 'client', id: group.client.id }, $event)"
+            ></tr>
+
+            @for (project of group.projects; track project.id) {
+              <tr
+                app-project-row
+                [project]="project"
+                [editor]="stateFor({ kind: 'project', id: project.id })"
+                (edit)="onEdit({ kind: 'project', id: project.id })"
+                (archive)="onArchive({ kind: 'project', id: project.id }, $event)"
+                (restore)="onRestore({ kind: 'project', id: project.id }, $event)"
+                (editorEvent)="onEditorEvent({ kind: 'project', id: project.id }, $event)"
+              ></tr>
+            }
+
+            @if (group.projects.length === 0 || group.hiddenProjects > 0) {
+              <tr class="note-row">
+                <td colspan="4" class="no-projects">
+                  @if (group.projects.length === 0) {
+                    Keine Projekte.
+                    @if (group.hiddenProjects > 0) {
+                      {{ group.hiddenProjects }} archivierte sind ausgeblendet.
+                    }
+                  } @else {
+                    {{ group.hiddenProjects }} archivierte ausgeblendet.
+                  }
+                </td>
+              </tr>
+            }
+
+            <!-- Neue Projekte nur unter aktiven Kunden. -->
+            @if (group.client.archivedAt === null) {
+              <tr
+                app-new-row
+                kind="project"
+                [label]="'Neues Projekt für ' + group.client.name"
+                [rowKey]="rowKey({ kind: 'new-project', clientId: group.client.id })"
+                [editor]="stateFor({ kind: 'new-project', clientId: group.client.id })"
+                (editorEvent)="
+                  onEditorEvent({ kind: 'new-project', clientId: group.client.id }, $event)
+                "
+              ></tr>
+            }
+          </tbody>
+        }
+
+        <tbody>
+          <tr
+            app-new-row
+            kind="client"
+            label="Neuer Kunde"
+            rowKey="nc"
+            [editor]="stateFor({ kind: 'new-client' })"
+            (editorEvent)="onEditorEvent({ kind: 'new-client' }, $event)"
+          ></tr>
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<app-warn-dialog
+  [message]="confirmMessage()"
+  [subject]="confirmSubject()"
+  heading="Archivieren?"
+  confirmLabel="Archivieren"
+  [confirmIcon]="null"
+  (confirmed)="onConfirm()"
+  (cancelled)="onCancelConfirm()"
+/>

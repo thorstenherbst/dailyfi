@@ -1,0 +1,139 @@
+@use '../abstracts' as *;
+
+// Toasts: toast-bg, Radius 10, Symbol + Text (+ Aktion)
+// + Schliessen (32 px). Rechts unten, 16 px ueber der Statusleiste — weit weg
+// vom Rund-Menue unten links. Steht rechts ein Panel, verschiebt
+// --toast-inset-right die Region links daneben.
+
+// Rechte Kante des offenen Rund-Menues samt Hover-Bruecke (304 px).
+$fab-reach: size(fab-inset) - size(fab-bridge-overhang) + size(fab-bridge-w);
+
+.toast-region {
+  position: fixed;
+  right: var(--toast-inset-right, #{space(4)});
+  bottom: space(4);
+  z-index: z(toast);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: space(2);
+  // Breite so begrenzt, dass der Menue-Ausloeser (16 + 48 px) links frei bleibt.
+  max-width: min(460px, calc(100vw - #{size(fab-inset) * 2 + size(fab-size) + space(4)}));
+  // Die leere Region darf keine Klicks schlucken.
+  pointer-events: none;
+
+  // Ab 1024 px (Raster, ggf. Panel) ueberlappt das offene Menue nie einen
+  // Toast: die Region beginnt links frühestens 16 px rechts von dessen
+  // Reichweite und wird dafuer schmaler (bei 1024 px mit Panel: 388 px).
+  @include from(lg) {
+    max-width: min(
+      460px,
+      calc(100vw - var(--toast-inset-right, #{space(4)}) - #{$fab-reach + space(4)})
+    );
+  }
+
+  &.has-status {
+    bottom: calc(#{layout(status-h)} + #{space(4)});
+  }
+}
+
+// Die beiden Live-Regionen (`.toast-live.sr-only`) stehen immer im DOM und
+// sind nie `display: none` — sonst fielen sie aus dem Accessibility-Tree, und
+// die erste Ansage ginge verloren. Ein leerer Stapel hat keine Hoehe und
+// schluckt dank `pointer-events: none` an der Region keine Klicks.
+.toast-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: space(2);
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: space(3);
+  min-height: 48px;
+  padding: space(2) space(2) space(2) space(4);
+  border-radius: radius(md);
+  background: var(--toast-bg);
+  color: var(--toast-text);
+  box-shadow: var(--shadow);
+  font-size: font-size(md);
+  pointer-events: auto;
+
+  @include motion {
+    animation: toast-in dur(base) ease-out;
+  }
+
+  .btn-link {
+    --btn-fg: var(--toast-action);
+  }
+
+  .btn-link:focus-visible,
+  .toast-close:focus-visible {
+    outline-color: var(--toast-action);
+  }
+}
+
+.toast-icon {
+  display: flex;
+  flex: none;
+  --icon-size: 20px;
+
+  .is-success > & {
+    color: var(--toast-success);
+  }
+
+  .is-info > & {
+    color: var(--toast-info);
+  }
+
+  .is-warning > & {
+    color: var(--toast-warning);
+  }
+
+  .is-error > & {
+    color: var(--toast-danger);
+  }
+}
+
+.toast-text {
+  flex: 1;
+  margin: 0;
+
+  b {
+    font-weight: font-weight(bold);
+  }
+}
+
+.toast-count {
+  @include mono;
+  margin-left: space(1);
+  font-size: font-size(sm);
+}
+
+.toast-close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: size(control-h-sm);
+  height: size(control-h-sm);
+  padding: 0;
+  border: 0;
+  border-radius: radius(sm);
+  background: transparent;
+  color: var(--toast-text);
+  cursor: pointer;
+  --icon-size: 18px;
+
+  &:hover {
+    background: var(--toast-close-hover);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}

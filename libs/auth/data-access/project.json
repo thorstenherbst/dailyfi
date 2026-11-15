@@ -1,0 +1,16 @@
+{
+  "name": "auth-data-access",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/auth/data-access/src",
+  "projectType": "library",
+  "prefix": "app",
+  "tags": [
+    "domain:auth",
+    "type:data-access"
+  ],
+  "targets": {
+    "test": {
+      "executor": "@angular/build:unit-test"
+    }
+  }
+}

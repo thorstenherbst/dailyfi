@@ -1,0 +1,12 @@
+@use 'abstracts' as *;
+
+// Der Rahmen ist nur noch Hauptbereich plus (mit Session) Statusleiste und
+// Rund-Menue. Beide sind fixiert; die Statusleiste darf nichts verdecken.
+main {
+  display: block;
+  min-height: 100dvh;
+
+  &.has-status {
+    padding-bottom: layout(status-h);
+  }
+}

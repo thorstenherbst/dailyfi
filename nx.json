@@ -1,0 +1,48 @@
+{
+  "defaultBase": "main",
+  "namedInputs": {
+    "sharedGlobals": [],
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "production": [
+      "default",
+      "!{projectRoot}/tsconfig.spec.json",
+      "!{projectRoot}/**/*.spec.[jt]s",
+      "!{projectRoot}/.eslintrc.json",
+      "!{projectRoot}/eslint.config.mjs"
+    ]
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
+      "cache": true
+    },
+    "test": {
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/tools/test-setup.ts",
+        "{workspaceRoot}/apps/dailyfi/project.json",
+        "{workspaceRoot}/apps/dailyfi/src/*.scss",
+        "{workspaceRoot}/libs/shared/styles/src/**/*.scss",
+        {
+          "env": "TZ"
+        }
+      ],
+      "cache": true,
+      "options": {
+        "buildTarget": "dailyfi:build:development",
+        "setupFiles": ["tools/test-setup.ts"],
+        "watch": false
+      }
+    }
+  },
+  "plugins": [
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    }
+  ]
+}

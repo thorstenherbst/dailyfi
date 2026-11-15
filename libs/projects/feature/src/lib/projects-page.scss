@@ -1,0 +1,37 @@
+@use 'abstracts' as *;
+
+// Kundengruppen mit Projektzeilen als echte Tabelle (components/_table.scss:
+// Kopf sunken 40 px, Zeilen 48 px, Zahlen Mono rechts). Die Zeilen selbst
+// stylen sich in projects/ui (rows.scss, row-editor.scss).
+
+:host {
+  display: block;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: space(2) space(3);
+}
+
+.projects-table {
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+// Hinweiszeile „1 archivierte ausgeblendet" — kein Hover, leiser Text.
+.note-row > td {
+  height: auto;
+  padding-block: space(3);
+  color: var(--text-muted);
+  font-size: font-size(base);
+}
+
+.table tbody tr.note-row:hover > * {
+  background: transparent;
+}
+
+tbody:last-child tr:last-child > td {
+  border-bottom: 0;
+}

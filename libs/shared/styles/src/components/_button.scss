@@ -1,0 +1,130 @@
+@use '../abstracts' as *;
+
+// Buttons nach Brief: 44 px hoch, Radius 10, 600. Disabled: 45 % und not-allowed.
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: space(2);
+  min-height: size(control-h);
+  min-width: 24px;
+  padding: 0 space(5);
+  border: 1px solid transparent;
+  border-radius: radius(btn);
+  font-size: font-size(md);
+  font-weight: font-weight(semibold);
+  line-height: 1.2;
+  white-space: nowrap;
+  text-decoration: none;
+  // Jede Variante setzt nur --btn-fg; gesperrt wird daraus die blasse Farbe.
+  --btn-fg: var(--text);
+  color: var(--btn-fg);
+  cursor: pointer;
+  transition: background-color dur(fast);
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  // Gesperrt, aber fokussierbar (sonst fiele der Fokus beim Sperren auf BODY):
+  // blass wird nur der Inhalt (Text **und** Symbole, die currentColor nutzen),
+  // Rand und Fokusring bleiben voll sichtbar. Ueber die Farbe statt ueber
+  // `opacity` auf Kindern — reiner Text ist kein Kind und blieb sonst kraeftig.
+  &[aria-disabled='true'] {
+    color: color-mix(in srgb, var(--btn-fg) 45%, transparent);
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary {
+  background: var(--primary);
+  --btn-fg: var(--on-primary);
+
+  &:hover:not(:disabled, [aria-disabled='true']) {
+    background: var(--primary-hover);
+  }
+}
+
+.btn-secondary {
+  background: var(--surface-raised);
+  --btn-fg: var(--text);
+  border-color: var(--border-strong);
+
+  &:hover:not(:disabled, [aria-disabled='true']) {
+    background: var(--hover-bg);
+  }
+}
+
+// Gefuellt: nur in der Loesch-Rueckfrage.
+.btn-danger {
+  background: var(--danger);
+  --btn-fg: var(--on-danger);
+
+  &:hover:not(:disabled, [aria-disabled='true']) {
+    background: var(--danger-hover);
+  }
+}
+
+// Leise Gefahr: Archivieren, Loeschen im Detail-Panel.
+.btn-ghost-danger {
+  background: transparent;
+  --btn-fg: var(--danger);
+  border-color: var(--border-strong);
+
+  &:hover:not(:disabled, [aria-disabled='true']) {
+    background: var(--hover-bg);
+  }
+}
+
+// Icon-Button: quadratisch, immer mit aria-label.
+.btn-icon {
+  width: size(control-h);
+  padding: 0;
+  background: var(--surface-raised);
+  --btn-fg: var(--text);
+  border-color: var(--border-strong);
+
+  &:hover:not(:disabled, [aria-disabled='true']) {
+    background: var(--hover-bg);
+  }
+}
+
+// Kompakt: Seitenkopf, Tabellenzeilen. 32 px bleibt ueber dem 24-px-Minimum.
+.btn-sm {
+  min-height: size(control-h-sm);
+  padding: 0 space(3);
+  font-size: font-size(sm);
+
+  &.btn-icon {
+    width: size(control-h-sm);
+    padding: 0;
+  }
+}
+
+// Link-Button: „Abmelden", Wechsel zwischen Login und Registrierung.
+.btn-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 space(1);
+  border: 0;
+  background: none;
+  --btn-fg: var(--primary);
+  color: var(--btn-fg);
+  font-size: inherit;
+  font-weight: font-weight(semibold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+
+  &:hover:not(:disabled, [aria-disabled='true']) {
+    text-decoration-thickness: 2px;
+  }
+
+  &:disabled,
+  &[aria-disabled='true'] {
+    color: color-mix(in srgb, var(--btn-fg) 45%, transparent);
+    cursor: not-allowed;
+  }
+}

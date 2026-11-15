@@ -1,0 +1,16 @@
+{
+  "name": "reports-domain",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/reports/domain/src",
+  "projectType": "library",
+  "prefix": "app",
+  "tags": [
+    "domain:reports",
+    "type:domain"
+  ],
+  "targets": {
+    "test": {
+      "executor": "@angular/build:unit-test"
+    }
+  }
+}

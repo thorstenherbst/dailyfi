@@ -1,0 +1,287 @@
+@use '../abstracts' as *;
+
+// Zeitblock im Wochenraster (Brief „Zeitblock", „Griffe"). Steht global, weil
+// er eine Komponente des Designs ist und die Seite sonst ihr Style-Budget
+// sprengt; gezeichnet wird er nur in week-page.
+
+// Zeilenhoehen im Block — die Container-Queries unten rechnen damit.
+$name-line: font-size(sm) * line-height(block); // 16.25 px
+$time-line: font-size(xs) * line-height(block); // 15 px
+// Breite der Zeit in Mono (0,6 em je Zeichen): „09:00–10:00" und „09:00".
+$time-range-w: font-size(xs) * 0.6 * 11; // 79.2 px
+$time-start-w: font-size(xs) * 0.6 * 5; // 36 px
+
+// Gefuellte Bloecke in der Projektfarbe (.pcN setzt --p-fill / --p-on).
+// Der Knopf selbst schneidet nicht ab (die Griffe ragen ueber die Kante),
+// das erledigt .block-body.
+//
+// Jeder Block ist ein Groessen-Container (`blk`): was er zeigt, haengt an
+// seiner Innenhoehe und -breite. Text steht nur in ganzen Zeilen — nie eine
+// halbe Glyphe; der volle Inhalt steht im aria-label.
+.block {
+  position: absolute;
+  container: blk / size;
+  z-index: z(raster);
+  display: flex;
+  flex-direction: column;
+  // Eine Viertelstunde waere 15 px hoch. Das trifft niemand mit der Maus —
+  // also bekommt jeder Block mindestens 24 px (Zielgroesse, WCAG 2.5.8).
+  min-height: 24px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: radius(block);
+  background: var(--p-fill);
+  color: var(--p-on);
+  box-shadow: var(--shadow-sm);
+  font-size: font-size(sm);
+  line-height: line-height(block);
+  text-align: left;
+  cursor: grab;
+
+  &:hover {
+    box-shadow:
+      0 0 0 1px var(--border-strong),
+      var(--shadow-sm);
+    filter: brightness(1.06);
+  }
+
+  &:focus-visible {
+    z-index: z(block-focus);
+  }
+
+  // Im Panel geoeffnet: ein Rahmen *innen* — aussen 2 px in --text (hebt sich
+  // vom Raster ab), darin 2 px in --p-on (hebt sich von der Blockflaeche ab,
+  // dieselbe Paarung wie der Text). Der Fokusring liegt *aussen* in --focus
+  // und bleibt dem Fokus vorbehalten; ausgewaehlt und fokussiert zeigt beides.
+  // Dazu aria-current — die Farbe ist nie die einzige Information.
+  &.is-selected,
+  &.is-selected:hover {
+    z-index: z(block-focus);
+    box-shadow:
+      inset 0 0 0 2px var(--text),
+      inset 0 0 0 4px var(--p-on),
+      var(--shadow-sm);
+  }
+
+  &.is-short {
+    justify-content: center;
+    padding: 0 space(2);
+    font-size: font-size(xs);
+
+    .block-body {
+      flex: none;
+      flex-flow: row nowrap;
+      align-items: center;
+      gap: 6px;
+
+      > * {
+        width: auto;
+      }
+    }
+
+    .block-name {
+      display: block;
+      flex: 0 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .block-time {
+      flex: none;
+    }
+  }
+}
+
+// Spalten-Umbruch als Schere: was nicht mehr ganz unter die vorigen Zeilen
+// passt (Notiz, „abger."), rutscht in eine zweite Spalte rechts ausserhalb und
+// wird abgeschnitten — ganz, nicht zur Haelfte.
+.block-body {
+  display: flex;
+  flex: 1;
+  flex-flow: column wrap;
+  align-content: flex-start;
+  min-height: 0;
+  overflow: hidden;
+
+  > * {
+    flex: none;
+    width: 100%;
+  }
+}
+
+// Zeilenzahl nach Hoehe: zwei Zeilen nur, wenn darunter die Zeit noch ganz
+// passt (2 × 16,25 + 15 = 47,5 px Innenhoehe — eine Stunde hat 48).
+.block-name {
+  display: -webkit-box;
+  overflow: hidden;
+  // Lange Namen lieber an Silbengrenzen trennen („Barriere-freiheit") als
+  // mitten im Wort; `anywhere` bleibt Rueckfall fuer Unteilbares.
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  font-weight: font-weight(bold);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+@container blk (min-height: #{2 * $name-line + $time-line}) {
+  .block-name {
+    -webkit-line-clamp: 2;
+  }
+}
+
+.block-time,
+.block-billed {
+  @include mono;
+  font-size: font-size(xs);
+  white-space: nowrap;
+}
+
+.block-note {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Die Zeit bricht nie um: passt „09:00–10:00" nicht, bleibt „09:00"; passt
+// auch das nicht (schmale Spur neben einem ueberlappenden Block), nur der Name
+// einzeilig mit Ellipse.
+.block-time-end {
+  display: none;
+}
+
+@container blk (min-width: #{$time-range-w}) {
+  .block-time-end {
+    display: inline;
+  }
+}
+
+// Kurzer Block, eine Zeile: reicht die Breite nicht fuer Name und Startzeit,
+// bleibt der Name (mit Ellipse) — die Zeit steht im aria-label.
+@container blk (max-width: #{$time-range-w}) {
+  .block.is-short .block-time {
+    display: none;
+  }
+}
+
+// Nur in den schmalsten Spuren sichtbar (s. u.).
+.block-initial {
+  display: none;
+}
+
+@container blk (max-width: #{$time-start-w}) {
+  .block .block-time,
+  .block .block-note,
+  .block .block-billed {
+    display: none;
+  }
+
+  // Die Schrift darf naeher an die Kante (Innenabstand 2–6 px statt 6–10).
+  .block .block-body {
+    margin-inline: -4px;
+  }
+
+  .block .block-name {
+    display: block;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// So schmal, dass nicht einmal „S…" ganz hineinpasst (drei Spuren bei
+// 1024–1440 px): nur der Anfangsbuchstabe, ohne Ellipse — Chrome schnitte
+// sonst die Ellipse an.
+@container blk (max-width: 23px) {
+  // Spezifisch genug auch fuer kurze Bloecke (.block.is-short .block-name).
+  .block .block-body > .block-name {
+    display: none;
+  }
+
+  .block .block-body > .block-initial {
+    display: block;
+    font-weight: font-weight(bold);
+  }
+}
+
+// Griffe: bis 24 px hoch, ueber der Kante — innen hoechstens 12 px, sodass in
+// der Mitte immer ≥ 24 px zum Verschieben bleiben (--handle-inset aus
+// handleInsetPx() in week-grid-view.ts). Nach aussen ragen sie je Kante
+// hoechstens bis zur halben Luecke zum Nachbarn (handleOutsetPx(), Lage und
+// Hoehe inline im Template); an angrenzenden Bloecken gar nicht. Die
+// Tastatur-Entsprechung ist ⇧ + ↑/↓, darum keine eigenen Fokusziele (Button im
+// Button waere ungueltig). Sichtbar wird der Steg nur am fokussierten Block.
+.handle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  cursor: ns-resize;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    display: none;
+    width: 18px;
+    height: 6px;
+    margin-left: -9px;
+    border-radius: 3px;
+    background: var(--surface-raised);
+    box-shadow: 0 0 0 2px var(--focus);
+  }
+
+  // Steg mittig auf der Blockkante.
+  &.top::after {
+    bottom: calc(var(--handle-inset, 12px) - 3px);
+  }
+
+  &.bottom::after {
+    top: calc(var(--handle-inset, 12px) - 3px);
+  }
+
+  .block:focus-visible > &::after,
+  .block.is-selected > &::after {
+    display: block;
+  }
+
+  // Ausgewaehlt, aber nicht fokussiert: Stege in --text statt --focus.
+  .block.is-selected:not(:focus-visible) > &::after {
+    box-shadow: 0 0 0 2px var(--text);
+  }
+}
+
+.block.draft {
+  left: 3px;
+  right: 3px;
+  width: auto;
+  border: 1px dashed var(--primary);
+  background: var(--selected-bg);
+  box-shadow: none;
+  color: var(--primary);
+  font-size: font-size(xs);
+  font-weight: font-weight(semibold);
+  pointer-events: none;
+}
+
+// Schmale Tagesspalte (1024–1279 px mit Panel): weniger Innenabstand, Zeit
+// eine Stufe kleiner — sonst bricht „09:00–10:00" um und die Notiz einer
+// Stunde wird abgeschnitten.
+@container day (max-width: 110px) {
+  .block {
+    padding: 4px 6px;
+  }
+
+  .block-time,
+  .block-billed {
+    font-size: font-size(2xs);
+    letter-spacing: -0.02em;
+  }
+
+  // Dieselbe Regel wie oben, mit der kleineren Zeit (11 px, −0,02 em).
+  @container blk (min-width: #{font-size(2xs) * 0.58 * 11}) {
+    .block-time-end {
+      display: inline;
+    }
+  }
+}

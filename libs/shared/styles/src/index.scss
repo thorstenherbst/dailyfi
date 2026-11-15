@@ -1,0 +1,23 @@
+// Einziger globaler Einstieg der App (apps/dailyfi/project.json → styles).
+// Reihenfolge: Theme/Tokens → Reset → Typo → Komponenten → Utilities.
+@use 'base/fonts';
+@use 'base/theme';
+@use 'base/reset';
+@use 'base/typography';
+
+@use 'components/button';
+@use 'components/field';
+@use 'components/modal';
+@use 'components/table';
+@use 'components/pagehead';
+@use 'components/notice';
+@use 'components/toast';
+@use 'components/panel';
+@use 'components/time-block';
+@use 'components/load-error';
+@use 'components/tag';
+@use 'components/project-color';
+@use 'components/tooltip';
+
+@use 'utilities/a11y';
+@use 'utilities/layout';

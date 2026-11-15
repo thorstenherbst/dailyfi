@@ -1,0 +1,35 @@
+<!-- Mit <base href="/"> waere `#main` eine Dokument-Navigation (Neuladen auf
+     /#main). Darum faengt die Shell Klick und Enter ab und fokussiert `main`
+     direkt; ohne JS bleibt der normale Sprung. -->
+<a class="skip-link" href="#main" (click)="skipToMain($event)">Zum Hauptinhalt springen</a>
+
+<!-- Navigation vor dem Inhalt: per Tab zuerst erreichbar, schwebt aber unten
+     links (position: fixed). Nur mit Session und Freischaltung — ohne fuehrt
+     keines der Ziele irgendwohin. -->
+@if (shell()) {
+  <app-nav-menu [items]="navItems" />
+}
+
+<main #main id="main" tabindex="-1" [class.has-status]="shell()">
+  <router-outlet />
+</main>
+
+@if (shell(); as user) {
+  <app-status-bar
+    [email]="user.email"
+    [sync]="status().sync ?? null"
+    [weekNumber]="status().weekNumber ?? null"
+    [weekTotal]="status().weekTotal ?? null"
+    [todayTotal]="status().todayTotal ?? null"
+    [shortcuts]="status().shortcuts ?? []"
+    (signOut)="onSignOut()"
+  />
+}
+
+<!-- Von Anfang an im DOM, auch leer: sonst registrieren Screenreader die
+     Live-Regionen nicht. -->
+<app-toast-region [aboveStatusBar]="!!shell()" />
+
+@if (sessionExpired()) {
+  <app-session-expired-dialog [open]="true" (relogin)="onRelogin()" />
+}

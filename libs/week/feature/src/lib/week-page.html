@@ -1,0 +1,239 @@
+<!-- Links Kopf und Raster, rechts das Panel als eigene Spalte. Im DOM steht
+     das Panel hinter dem Raster: Tab laeuft Seitenkopf → Raster → Panel. -->
+<div class="week-main">
+  <!-- Jede Aenderung, egal ob per Maus oder Tastatur, wird hier angesagt. -->
+  <p class="sr-only" role="status" aria-live="polite">{{ store.announcement() }}</p>
+
+  <header class="pagehead">
+    <app-wordmark />
+    <h1 class="pagehead-title" tabindex="-1">
+      {{ monthLabel() }}
+      <span class="pagehead-sub">KW {{ store.weekNumber() }} · {{ weekLabelShort() }}</span>
+    </h1>
+
+    <div class="toolbar">
+      <button
+        class="btn btn-icon btn-sm"
+        type="button"
+        (click)="onPreviousWeek($event)"
+        aria-label="Vorherige Woche"
+      >
+        <app-icon name="left" />
+      </button>
+      <button class="btn btn-secondary btn-sm" type="button" (click)="onToday($event)">Heute</button>
+      <button
+        class="btn btn-icon btn-sm"
+        type="button"
+        (click)="onNextWeek($event)"
+        aria-label="Nächste Woche"
+      >
+        <app-icon name="right" />
+      </button>
+    </div>
+
+    <span class="pagehead-spacer"></span>
+
+    <button class="btn btn-primary btn-sm" type="button" (click)="onAddEntry()" #addButton>
+      <app-icon name="plus" />
+      <!-- Unter 1536 px nur das Symbol; der Name bleibt fuer Screenreader. -->
+      <span class="wide-label">Zeit eintragen</span>
+    </button>
+
+    <p class="pagehead-sum">
+      Woche <strong>{{ totalLabel() }} h</strong>
+    </p>
+  </header>
+
+  @if (store.loadError(); as reason) {
+    <!-- Statt eines leeren Rasters, das „nichts erfasst" behauptete. -->
+    <app-load-error
+      class="week-load-error"
+      title="Die Woche konnte nicht geladen werden."
+      [detail]="reason"
+      [busy]="store.loading()"
+      (retry)="onRetryLoad()"
+    />
+  }
+
+  @if (dstNote(); as note) {
+    <p class="notice notice-warning">
+      <app-icon class="notice-icon" name="info" />
+      <span class="notice-text">
+        {{ note }} Das Raster zeigt 24 Zeilen; abgerechnet wird die tatsächlich vergangene Zeit.
+      </span>
+    </p>
+  }
+
+  <div class="narrow-hint hint-card">
+    <app-icon name="monitor" />
+    <p>
+      <strong>Dailyfi braucht ein größeres Fenster.</strong>
+      <span class="hint">
+        Das Wochenraster ist für Bildschirme ab 1024 px gebaut. Vergrößere das Fenster oder öffne
+        Dailyfi am Rechner.
+      </span>
+    </p>
+  </div>
+
+  <!-- Sichtbar stehen die Kuerzel in der Statusleiste; hier beschreiben sie das
+     Raster fuer Screenreader (aria-describedby). -->
+  <p class="sr-only" id="week-keys">
+    Tastatur im Raster: Pfeil hoch und runter verschieben, Umschalt plus Pfeil hoch oder runter
+    ändert die Dauer, Pfeil links und rechts wechselt den Tag, Enter öffnet den Block im Panel,
+    Escape hebt die Auswahl auf, Entf löschen.
+  </p>
+
+  <div class="week" [class.is-dragging]="dragging()" [hidden]="!!store.loadError()">
+    <div class="week-head">
+      <div class="axis-head"><span class="sr-only">Uhrzeit</span></div>
+      @for (column of columns(); track column.key) {
+        <div
+          class="day-head"
+          [class.is-today]="column.isToday"
+          [attr.aria-current]="column.isToday ? 'date' : null"
+        >
+          <span class="day-name">{{ column.weekdayShort }}</span>
+          <span class="day-date mono">{{ column.dayOfMonth }}</span>
+          @if (column.isToday) {
+            <span class="today-tag">Heute</span>
+          }
+          <span class="day-sum mono">
+            @if (column.totalHours > 0) {
+              {{ formatDayTotal(column.totalHours) }}
+            } @else {
+              <span aria-hidden="true">–</span><span class="sr-only">keine Zeit</span>
+            }
+          </span>
+        </div>
+      }
+    </div>
+
+    <!-- Chrome macht scrollbare Bereiche ohnehin fokussierbar, damit man sie mit
+       der Tastatur scrollen kann. Dann soll dieser Halt auch einen Namen haben. -->
+    <div
+      class="week-scroll"
+      #scroller
+      tabindex="0"
+      role="group"
+      aria-label="Wochenraster, Stunden 00 bis 24"
+      aria-describedby="week-keys"
+    >
+      <div class="week-body" #body [style.height.px]="dayHeightPx">
+        <div class="axis" aria-hidden="true">
+          @for (hour of hours; track hour) {
+            <div [style.height.px]="hourHeightPx">
+              <span class="mono">{{ formatHour(hour) }}:00</span>
+            </div>
+          }
+        </div>
+
+        @for (column of columns(); track column.key) {
+          <div
+            class="col"
+            [class.is-today]="column.isToday"
+            [class.is-weekend]="column.isWeekend"
+            (pointerdown)="onColumnPointerDown($event, column.key)"
+          >
+            @for (block of column.blocks; track block.id) {
+              <button
+                type="button"
+                [class]="'block ' + block.colorClass"
+                [class.is-short]="block.isShort"
+                [class.is-selected]="block.id === selectedId()"
+                [attr.aria-current]="block.id === selectedId() ? 'true' : null"
+                [attr.data-entry-id]="block.id"
+                [attr.aria-label]="block.ariaLabel"
+                [style.top.px]="block.topPx"
+                [style.height.px]="block.heightPx"
+                [style.left]="block.leftCss"
+                [style.width]="block.widthCss"
+                [style.--handle-inset]="block.handleInsetPx + 'px'"
+                (pointerdown)="onBlockPointerDown($event, block)"
+                (click)="onBlockClick(block)"
+                (keydown)="onBlockKeydown($event, block)"
+              >
+                @if (block.showHandles) {
+                  <span
+                    class="handle top"
+                    aria-hidden="true"
+                    [style.top.px]="-block.handleOutsetTopPx"
+                    [style.height.px]="block.handleInsetPx + block.handleOutsetTopPx"
+                    (pointerdown)="onHandlePointerDown($event, block, 'top')"
+                  ></span>
+                }
+                <span class="block-body">
+                  <b class="block-name">{{ block.projectName }}</b>
+                  <b class="block-initial" aria-hidden="true">{{ block.projectName.charAt(0) }}</b>
+                  <!-- Nur ganze Zeilen: was nicht ganz passt, entfaellt (Name per
+                       line-clamp, Notiz und Ende der Zeit per Container-Query
+                       in _time-block.scss). Voll steht alles im aria-label. -->
+                  <span class="block-time"
+                    >{{ block.startLabel
+                    }}@if (!block.isShort) {<span class="block-time-end">{{
+                        block.endLabel
+                      }}</span>}</span
+                  >
+                  @if (block.showNote) {
+                    <span class="block-note">{{ block.description }}</span>
+                  }
+                  @if (block.billedNote; as billed) {
+                    <span class="block-billed">abger. {{ billed }}</span>
+                  }
+                </span>
+                @if (block.showHandles) {
+                  <span
+                    class="handle bottom"
+                    aria-hidden="true"
+                    [style.bottom.px]="-block.handleOutsetBottomPx"
+                    [style.height.px]="block.handleInsetPx + block.handleOutsetBottomPx"
+                    (pointerdown)="onHandlePointerDown($event, block, 'bottom')"
+                  ></span>
+                }
+              </button>
+            }
+
+            @if (draft(); as ghost) {
+              @if (ghost.dayKey === column.key) {
+                <div
+                  class="block draft"
+                  aria-hidden="true"
+                  [style.top.px]="ghost.topPx"
+                  [style.height.px]="ghost.heightPx"
+                >
+                  <span class="draft-label">Neuer Eintrag</span>
+                </div>
+              }
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-entry-panel
+  class="week-panel"
+  [mode]="panel.mode()"
+  [values]="panel.values()"
+  [projects]="store.projects()"
+  [dayOptions]="store.days()"
+  [problem]="panel.problem()"
+  [notice]="panel.notice()"
+  [noticeMessage]="panel.noticeMessage()"
+  [noticeRevision]="panel.noticeRevision()"
+  [busy]="panel.busy()"
+  (changed)="onPanelChange($event)"
+  (save)="onPanelSave()"
+  (cancelled)="onPanelCancel()"
+  (remove)="onPanelRemove()"
+  (escape)="onPanelEscape()"
+  (keep)="onNoticeKeep()"
+  (discard)="onNoticeDiscard()"
+/>
+
+<app-warn-dialog
+  [message]="confirmMessage()"
+  [subject]="confirmSubject()"
+  (confirmed)="onConfirmDelete()"
+  (cancelled)="onCancelDelete()"
+/>

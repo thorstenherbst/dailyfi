@@ -1,0 +1,16 @@
+{
+  "name": "week-data-access",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/week/data-access/src",
+  "projectType": "library",
+  "prefix": "app",
+  "tags": [
+    "domain:week",
+    "type:data-access"
+  ],
+  "targets": {
+    "test": {
+      "executor": "@angular/build:unit-test"
+    }
+  }
+}

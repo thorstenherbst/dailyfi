@@ -1,0 +1,92 @@
+@use '../abstracts' as *;
+
+// Seitenkopf jeder Seite: Wortmarke | Titel | Aktionen. Keine eigene Kopfzeile.
+// Ab 1024 px immer einzeilig: Elemente verdichten (Seiten blenden z. B.
+// Button-Texte aus), nie umbrechen.
+.pagehead {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: space(3);
+  min-height: layout(pagehead-h);
+  padding: space(3) space(5);
+  border-bottom: 1px solid var(--border);
+
+  > * {
+    flex: none;
+  }
+
+  .wordmark {
+    align-self: stretch;
+    padding-right: space(4);
+    margin-right: space(1);
+    border-right: 1px solid var(--border);
+  }
+}
+
+.pagehead-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  gap: space(1) space(3);
+  margin-right: space(2);
+  font-size: font-size(xl);
+}
+
+.pagehead-sub {
+  @include mono;
+  font-size: font-size(sm);
+  font-weight: font-weight(medium);
+  letter-spacing: 0;
+  color: var(--text-muted);
+}
+
+.pagehead .pagehead-spacer {
+  flex: 1;
+  min-width: 0;
+}
+
+// Summen-Box rechts im Kopf („Woche 24,25 h").
+.pagehead-sum {
+  display: flex;
+  align-items: baseline;
+  gap: space(2);
+  padding: space(1) space(4);
+  border: 1px solid var(--border);
+  border-radius: radius(md);
+  background: var(--surface-raised);
+  color: var(--text-muted);
+  font-size: font-size(sm);
+
+  strong {
+    @include mono;
+    color: var(--text);
+    font-size: font-size(lg);
+    font-weight: font-weight(semibold);
+  }
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: space(2);
+  color: var(--text);
+  font-size: font-size(lg);
+  font-weight: font-weight(bold);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.beta {
+  padding: 1px 6px;
+  border: 1px solid var(--primary);
+  border-radius: radius(sm);
+  background: var(--selected-bg);
+  color: var(--primary);
+  font-size: font-size(xs);
+  font-weight: font-weight(semibold);
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}

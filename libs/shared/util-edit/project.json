@@ -1,0 +1,16 @@
+{
+  "name": "shared-util-edit",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/util-edit/src",
+  "projectType": "library",
+  "prefix": "app",
+  "tags": [
+    "domain:shared",
+    "type:util"
+  ],
+  "targets": {
+    "test": {
+      "executor": "@angular/build:unit-test"
+    }
+  }
+}

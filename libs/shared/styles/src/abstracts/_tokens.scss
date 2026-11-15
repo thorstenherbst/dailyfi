@@ -1,0 +1,130 @@
+// SASS-Tokens: alles, was zur Buildzeit feststeht und NICHT zwischen Themes
+// wechselt. Farben und Schatten stehen hier nie — die leben ausschliesslich
+// als CSS Custom Properties in base/_theme.scss (sonst bricht der Dunkelmodus).
+//
+// Die Maps sind die einzige Quelle. Als Custom Property ausgegeben wird nur, was
+// zur Laufzeit wirklich gelesen wird (--hour-h, --axis-w, --dur-* in
+// base/_theme.scss, --panel-w in components/_panel.scss).
+
+// Abstaende, Basis 4 px. Schluessel = Vielfaches von 4.
+$space: (
+  1: 4px,
+  2: 8px,
+  3: 12px,
+  4: 16px,
+  5: 20px,
+  6: 24px,
+  8: 32px,
+  10: 40px,
+  12: 48px,
+  16: 64px,
+);
+
+$font-size: (
+  // Nur fuer die Zeit im Block in schmalen Tagesspalten (1024–1279 px).
+  2xs: 11px,
+  xs: 12px,
+  sm: 13px,
+  base: 14px,
+  md: 15px,
+  lg: 18px,
+  xl: 22px,
+  2xl: 30px,
+);
+
+$font-weight: (
+  regular: 400,
+  medium: 500,
+  semibold: 600,
+  bold: 700,
+);
+
+$line-height: (
+  text: 1.5,
+  heading: 1.2,
+  block: 1.25,
+);
+
+$font-family: (
+  ui: (
+    'Inter',
+    system-ui,
+    sans-serif,
+  ),
+  mono: (
+    'JetBrains Mono',
+    ui-monospace,
+    monospace,
+  ),
+);
+
+$radius: (
+  sm: 6px,
+  md: 10px,
+  lg: 16px,
+  btn: 10px,
+  block: 8px,
+  full: 999px,
+);
+
+// 1024: darunter der Hinweis „größeres Fenster" statt des Rasters.
+$breakpoints: (
+  lg: 1024px,
+  xl: 1280px,
+  2xl: 1536px,
+);
+
+// Raster < Panel < Statusleiste < Toast < Menü < Modal.
+$z: (
+  raster: 1,
+  block-focus: 3,
+  panel: 10,
+  status: 20,
+  toast: 40,
+  fab: 50,
+  modal: 100,
+  skip-link: 200,
+);
+
+// CSS-Uebergaenge nutzen die SASS-Werte, die JS-Timer des Rund-Menues lesen
+// dieselben Werte als --dur-* (eine Quelle).
+$duration: (
+  fast: 120ms,
+  base: 180ms,
+  open-delay: 80ms,
+  close-delay: 400ms,
+  toast: 6000ms,
+  toast-warning: 10000ms,
+);
+
+// Masse der Bedienelemente und des Rund-Menues.
+$size: (
+  control-h: 44px,
+  control-h-sm: 32px,
+  fab-size: 48px,
+  fab-item: 44px,
+  fab-radius: 120px,
+  fab-inset: 16px,
+  fab-bridge-w: 300px,
+  fab-bridge-h: 200px,
+  // So weit steht die Hover-Bruecke links und unten ueber den Ausloeser.
+  // Ihre rechte Kante (fab-inset − Ueberstand + fab-bridge-w = 304 px) ist die
+  // Reichweite des offenen Menues; Toasts beginnen ab lg 16 px rechts davon.
+  fab-bridge-overhang: 12px,
+  auth-card-w: 400px,
+  container-w: 1280px,
+);
+
+// Layoutmasse, die das Raster und der App-Rahmen auch zur Laufzeit brauchen.
+// hour-h und axis-w stehen zusaetzlich als Konstanten im TS-Code
+// (HOUR_HEIGHT_PX, AXIS_WIDTH_PX in util-time) — die Zeiger-
+// Geometrie rechnet in Pixeln. grid-geometry.spec.ts (util-time) prueft beide.
+$layout: (
+  hour-h: 60px,
+  axis-w: 72px,
+  panel-w: 340px,
+  // Unter 1280 px: sieben Tagesspalten brauchen den Platz.
+  panel-w-narrow: 300px,
+  status-h: 32px,
+  pagehead-h: 64px,
+);

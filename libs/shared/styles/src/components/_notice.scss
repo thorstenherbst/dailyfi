@@ -1,0 +1,64 @@
+@use '../abstracts' as *;
+
+// Dauerhafte Hinweise im Seitenfluss, die zum Inhalt gehoeren (Zeitumstellung,
+// fehlender Stundensatz). Immer Symbol + Text. Fehler und Rueckmeldungen sind
+// Toasts, Ladefehler `.load-error`.
+.notice {
+  display: flex;
+  align-items: center;
+  gap: space(3);
+  padding: space(3) space(4);
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-radius: radius(md);
+  background: var(--surface-raised);
+  color: var(--text);
+  font-size: font-size(base);
+
+  > .notice-icon {
+    flex: none;
+  }
+
+  > .notice-text {
+    flex: 1;
+  }
+}
+
+.notice-warning {
+  border-left-color: var(--warning);
+
+  > .notice-icon {
+    color: var(--warning);
+  }
+}
+
+.empty {
+  padding: space(8);
+  border: 1px dashed var(--border-strong);
+  border-radius: radius(lg);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+// Karte mit Symbol und Text, z. B. „Dailyfi braucht ein größeres Fenster".
+.hint-card {
+  display: flex;
+  gap: space(3);
+  align-items: flex-start;
+  max-width: 440px;
+  padding: space(5);
+  border: 1px solid var(--border);
+  border-radius: radius(lg);
+  background: var(--surface-raised);
+
+  > .icon {
+    color: var(--info);
+    --icon-size: 20px;
+  }
+
+  > p {
+    display: flex;
+    flex-direction: column;
+    gap: space(1);
+  }
+}

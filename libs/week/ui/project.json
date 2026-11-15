@@ -1,0 +1,16 @@
+{
+  "name": "week-ui",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/week/ui/src",
+  "projectType": "library",
+  "prefix": "app",
+  "tags": [
+    "domain:week",
+    "type:ui"
+  ],
+  "targets": {
+    "test": {
+      "executor": "@angular/build:unit-test"
+    }
+  }
+}

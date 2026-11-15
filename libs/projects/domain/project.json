@@ -1,0 +1,16 @@
+{
+  "name": "projects-domain",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/projects/domain/src",
+  "projectType": "library",
+  "prefix": "app",
+  "tags": [
+    "domain:projects",
+    "type:domain"
+  ],
+  "targets": {
+    "test": {
+      "executor": "@angular/build:unit-test"
+    }
+  }
+}

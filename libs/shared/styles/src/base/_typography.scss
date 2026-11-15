@@ -1,0 +1,43 @@
+@use '../abstracts' as *;
+
+html {
+  background: var(--surface);
+}
+
+body {
+  background: var(--surface);
+  color: var(--text);
+  font-family: font-family(ui);
+  font-size: font-size(base);
+  line-height: line-height(text);
+  font-feature-settings: 'cv11', 'ss01';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: font-weight(bold);
+  letter-spacing: -0.02em;
+  line-height: line-height(heading);
+}
+
+a {
+  color: var(--primary);
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+.mono {
+  @include mono;
+}
+
+// Sichtbarer Fokus ueberall. `outline: none` ohne Ersatz kommt nirgends vor.
+:focus-visible {
+  @include focus-ring;
+}

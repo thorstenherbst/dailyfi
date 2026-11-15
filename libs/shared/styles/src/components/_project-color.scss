@@ -1,0 +1,24 @@
+@use '../abstracts' as *;
+
+// Projektfarbe als Klasse: .pc1 … .pc6 setzen --p-fill / --p-on, die Bloecke,
+// Farbpunkte und Farbwahl lesen. Die Werte selbst stehen in base/_theme.scss.
+@for $i from 1 through 6 {
+  .pc#{$i} {
+    --p-fill: var(--pc#{$i}-fill);
+    --p-on: var(--pc#{$i}-on);
+  }
+}
+
+// Eintrag ohne (bekanntes) Projekt: neutral, der Name steht ohnehin im Block.
+.pc-none {
+  --p-fill: var(--surface-sunken);
+  --p-on: var(--text);
+}
+
+.dot {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--p-fill);
+}

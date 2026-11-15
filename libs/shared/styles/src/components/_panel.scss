@@ -1,0 +1,210 @@
+@use '../abstracts' as *;
+
+// Detail-Panel: buendige Spalte rechts, surface-raised, Haarlinie links. Kopf / scrollender Inhalt /
+// Aktionsleiste unten. Nicht modal: es ueberdeckt nichts und wird von nichts
+// ueberdeckt (eigene Grid-Spalte der Seite).
+//
+// Breite: --panel-w aus $layout (340 px). Zwischen 1024 und 1279 px schmaler
+// (panel-w-narrow), sonst bleiben dem Raster mit sieben Tagen keine 90 px je
+// Spalte (siehe week-page.scss).
+:root {
+  --panel-w: #{layout(panel-w)};
+
+  @include below(xl) {
+    --panel-w: #{layout(panel-w-narrow)};
+  }
+}
+
+// Solange eine Seite ein Panel zeigt (Attribut am <html>, gesetzt von der
+// Seite), stehen die Toasts links daneben — nie darueber. Unter 1024 px gibt
+// es kein Panel.
+@include from(lg) {
+  :root[data-side-panel] {
+    --toast-inset-right: calc(var(--panel-w) + #{space(4)});
+  }
+}
+
+.panel-host {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.panel {
+  position: relative;
+  z-index: z(panel);
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  border-left: 1px solid var(--border);
+  background: var(--surface-raised);
+}
+
+.panel-head {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(1) space(2);
+  min-height: layout(pagehead-h);
+  padding: space(2) space(5);
+  border-bottom: 1px solid var(--border);
+
+  .hint {
+    font-size: font-size(xs);
+  }
+}
+
+.panel-title {
+  margin-right: auto;
+  font-size: font-size(lg);
+}
+
+// Platz des Hinweises. Die Live-Region darin steht immer im DOM (leer ohne
+// Hoehe); Rahmen und Abstand bekommt er erst, wenn er steht (.panel-notice).
+.panel-notice-slot {
+  flex: none;
+}
+
+.panel-notice {
+  display: flex;
+  flex-direction: column;
+  gap: space(1);
+  margin: space(4) space(5) 0;
+  padding: space(3) space(4);
+  border: 1px solid var(--warning);
+  border-left-width: 4px;
+  border-radius: radius(md);
+  background: var(--surface-sunken);
+}
+
+.panel-live {
+  display: flex;
+  flex-direction: column;
+  gap: space(1);
+}
+
+.panel-notice-text {
+  display: flex;
+  align-items: center;
+  gap: space(2);
+  color: var(--warning);
+
+  b {
+    color: var(--text);
+  }
+}
+
+.panel-notice-actions {
+  display: flex;
+  gap: space(2);
+  margin-top: space(2);
+}
+
+.panel-form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.panel-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: space(4);
+  min-height: 0;
+  padding: space(5);
+  overflow: auto;
+
+  // Der Zeit-Hinweis gehoert eng zu Von/Bis.
+  .panel-row2 + .form-error,
+  .panel-row2 + .hint,
+  .form-error + .hint {
+    margin-top: -(space(2));
+  }
+}
+
+.panel-row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: space(3);
+}
+
+// Farbpunkt im geschlossenen Feld: Punkt **und** Name (nie Farbe allein).
+.select-wrap {
+  position: relative;
+  display: block;
+
+  .dot {
+    position: absolute;
+    top: 50%;
+    left: space(3);
+    margin-top: -6px;
+    pointer-events: none;
+  }
+
+  .input {
+    padding-left: space(8);
+  }
+
+  .input[aria-invalid='true'] {
+    padding-left: calc(#{space(8)} - 1px);
+  }
+}
+
+.panel-dur {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: space(3);
+  border-radius: radius(md);
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  font-size: font-size(sm);
+
+  b {
+    color: var(--text);
+    font-size: font-size(md);
+  }
+}
+
+.panel-kbd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(2) space(3);
+  font-size: font-size(xs);
+}
+
+.panel-actions {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: space(2);
+  padding: space(4) space(5);
+  border-top: 1px solid var(--border);
+
+  // Speichern ueber die volle Breite, darunter Abbrechen/Loeschen — drei
+  // 44-px-Knoepfe passen in 300–340 px nicht nebeneinander.
+  .btn {
+    flex: 1 1 0;
+  }
+
+  .btn-primary {
+    flex-basis: 100%;
+  }
+}
+
+.panel-empty {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+  padding: space(5);
+  color: var(--text-muted);
+
+  b {
+    color: var(--text);
+  }
+}

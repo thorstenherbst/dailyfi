@@ -1,0 +1,16 @@
+{
+  "name": "projects-feature",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/projects/feature/src",
+  "projectType": "library",
+  "prefix": "app",
+  "tags": [
+    "domain:projects",
+    "type:feature"
+  ],
+  "targets": {
+    "test": {
+      "executor": "@angular/build:unit-test"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "week-domain",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/week/domain/src",
+  "projectType": "library",
+  "prefix": "app",
+  "tags": [
+    "domain:week",
+    "type:domain"
+  ],
+  "targets": {
+    "test": {
+      "executor": "@angular/build:unit-test"
+    }
+  }
+}

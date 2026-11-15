@@ -1,0 +1,80 @@
+{
+  "name": "dailyfi",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/dailyfi/src",
+  "prefix": "app",
+  "tags": ["type:app"],
+  "implicitDependencies": ["shared-styles"],
+  "generators": {},
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "defaultConfiguration": "production",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "browser": "apps/dailyfi/src/main.ts",
+        "tsConfig": "apps/dailyfi/tsconfig.app.json",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/dailyfi/public"
+          }
+        ],
+        "styles": ["libs/shared/styles/src/index.scss"],
+        "outputPath": "dist/dailyfi",
+        "inlineStyleLanguage": "scss",
+        "stylePreprocessorOptions": {
+          "includePaths": ["libs/shared/styles/src"]
+        }
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "550kB",
+              "maximumError": "1MB"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "4kB",
+              "maximumError": "8kB"
+            }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "apps/dailyfi/src/environments/environment.ts",
+              "with": "apps/dailyfi/src/environments/environment.development.ts"
+            }
+          ]
+        }
+      }
+    },
+    "serve": {
+      "executor": "@angular/build:dev-server",
+      "defaultConfiguration": "development",
+      "continuous": true,
+      "readyWhen": {
+        "signal": true
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "dailyfi:build:production"
+        },
+        "development": {
+          "buildTarget": "dailyfi:build:development"
+        }
+      }
+    },
+    "test": {
+      "executor": "@angular/build:unit-test"
+    }
+  }
+}

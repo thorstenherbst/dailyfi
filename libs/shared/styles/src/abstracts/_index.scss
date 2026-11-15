@@ -1,0 +1,5 @@
+// Einstieg fuer Komponenten: @use 'abstracts' as *;
+// Erzeugt KEIN CSS — nur Tokens, Funktionen und Mixins.
+@forward 'tokens';
+@forward 'functions';
+@forward 'mixins';

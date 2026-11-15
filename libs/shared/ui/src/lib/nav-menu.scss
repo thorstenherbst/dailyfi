@@ -1,0 +1,160 @@
+@use 'abstracts' as *;
+
+// Masse und Dauern aus den SASS-Tokens; die JS-Timer lesen dieselben Werte
+// als --dur-open-delay / --dur-close-delay.
+$fab: size(fab-size);
+$fab-item: size(fab-item);
+$fab-r: size(fab-radius);
+
+:host {
+  position: fixed;
+  left: size(fab-inset);
+  bottom: calc(#{layout(status-h)} + #{size(fab-inset)});
+  z-index: z(fab);
+  width: $fab;
+  height: $fab;
+}
+
+// Unsichtbare Bruecke: haelt das per Hover geoeffnete Menue offen, waehrend die
+// Maus vom Ausloeser zu einem Ziel wandert. Angeheftet ist sie aus.
+:host::before {
+  content: '';
+  position: absolute;
+  left: -(size(fab-bridge-overhang));
+  bottom: -(size(fab-bridge-overhang));
+  display: none;
+  width: size(fab-bridge-w);
+  height: size(fab-bridge-h);
+}
+
+:host(.is-hover)::before {
+  display: block;
+}
+
+.fab-trigger {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: $fab;
+  height: $fab;
+  padding: 0;
+  border: 2px solid var(--nav-edge);
+  border-radius: 50%;
+  background: var(--nav-bg);
+  color: var(--nav-text);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  --icon-size: 22px;
+
+  &:hover {
+    background: var(--nav-hover-bg);
+  }
+
+  &:focus-visible {
+    @include focus-ring(3px);
+  }
+}
+
+li {
+  position: absolute;
+  left: ($fab - $fab-item) * 0.5;
+  top: ($fab - $fab-item) * 0.5;
+  width: $fab-item;
+  height: $fab-item;
+  visibility: hidden;
+  opacity: 0;
+  transform: translate(0, 0) scale(0.6);
+  transition:
+    transform dur(base) ease-out,
+    opacity dur(base),
+    visibility 0s linear dur(base);
+}
+
+:host(.is-open) li {
+  visibility: visible;
+  opacity: 1;
+  transition:
+    transform dur(base) ease-out,
+    opacity dur(base),
+    visibility 0s;
+
+  // Viertelkreis: oben, schraeg, rechts.
+  &:nth-child(1) {
+    transform: translate(0, -$fab-r) scale(1);
+  }
+
+  &:nth-child(2) {
+    transform: translate($fab-r * 0.7071, -$fab-r * 0.7071) scale(1);
+  }
+
+  &:nth-child(3) {
+    transform: translate($fab-r, 0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  li,
+  :host(.is-open) li {
+    transition: none;
+  }
+}
+
+a {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: $fab-item;
+  height: $fab-item;
+  border: 2px solid var(--nav-edge);
+  border-radius: 50%;
+  background: var(--nav-bg);
+  color: var(--nav-text);
+  box-shadow: var(--shadow);
+  text-decoration: none;
+  --icon-size: 20px;
+
+  &:hover {
+    background: var(--nav-hover-bg);
+  }
+
+  // Ring liegt mit 6 px ausserhalb des „aktuell"-Rings.
+  &:focus-visible {
+    @include focus-ring(6px);
+    background: var(--nav-hover-bg);
+  }
+
+  &[aria-current='page'] {
+    box-shadow:
+      0 0 0 3px var(--nav-brand),
+      0 0 0 5px var(--nav-bg),
+      var(--shadow);
+  }
+
+  &:hover .fab-label,
+  &:focus-visible .fab-label {
+    background: var(--nav-hover-bg);
+  }
+}
+
+.fab-label {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 3px 10px;
+  border: 1px solid var(--nav-edge);
+  border-radius: radius(sm);
+  background: var(--nav-bg);
+  color: var(--nav-text);
+  box-shadow: var(--shadow-sm);
+  font-size: font-size(sm);
+  font-weight: font-weight(semibold);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.current {
+  font-weight: font-weight(medium);
+  color: var(--nav-text-muted);
+}

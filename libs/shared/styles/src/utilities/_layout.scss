@@ -1,0 +1,23 @@
+@use '../abstracts' as *;
+
+// Inhaltsspalte fuer Listen-Seiten (/projects, /reports). Die Ecke unten links
+// gehoert dem schwebenden Menue-Ausloeser: links so viel Innenabstand, dass er
+// nie Inhalt verdeckt (16 + 48 + 16 px), unten Auslauf ueber ihm.
+$fab-lane: calc(#{size(fab-inset)} * 2 + #{size(fab-size)});
+
+.container {
+  width: 100%;
+  max-width: calc(#{size(container-w)} + #{size(fab-inset)} * 2 + #{size(fab-size)});
+  margin-inline: auto;
+  padding: space(6) space(6) $fab-lane $fab-lane;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: space(4);
+}
+
+.grow {
+  flex: 1;
+}

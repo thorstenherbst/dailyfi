@@ -1,0 +1,9 @@
+# Von `npm run db:types` erzeugt. Prettier wuerde die Datei komplett umbrechen,
+# und der naechste Generatorlauf schriebe sie wieder zurueck — ein Diff, das bei
+# jedem Schemawechsel erneut entsteht und nichts aussagt.
+libs/shared/data-access-supabase/src/lib/database.types.ts
+
+# Nicht von uns
+dist/
+.angular/
+node_modules/

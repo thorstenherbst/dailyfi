@@ -1,0 +1,55 @@
+@use 'abstracts' as *;
+
+// Tabelle, Hinweise und Kopf kommen aus der Styles-Lib (components/_table,
+// _notice, _pagehead). Hier nur, was nur diese Seite hat.
+
+:host {
+  display: block;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: space(2);
+}
+
+// „‹ Oktober 2026 ›": feste Breite, damit die Pfeile beim Blaettern nicht springen.
+.month {
+  min-width: 132px;
+  font-size: font-size(md);
+  font-weight: font-weight(bold);
+  text-align: center;
+}
+
+.client-row th {
+  font-weight: font-weight(bold);
+}
+
+.project {
+  padding-left: space(10);
+}
+
+.count {
+  margin-left: space(2);
+  color: var(--text-muted);
+  font-size: font-size(xs);
+}
+
+.tag {
+  margin-left: space(2);
+}
+
+tfoot th {
+  text-align: left;
+}
+
+// Unvollstaendiger Betrag: Stern plus Fussnote — nicht nur Farbe.
+.gap {
+  color: var(--warning);
+  font-weight: font-weight(bold);
+}
+
+.footnote {
+  color: var(--text-muted);
+  font-size: font-size(xs);
+}

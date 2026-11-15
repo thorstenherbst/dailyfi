@@ -1,0 +1,16 @@
+{
+  "name": "projects-data-access",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/projects/data-access/src",
+  "projectType": "library",
+  "prefix": "app",
+  "tags": [
+    "domain:projects",
+    "type:data-access"
+  ],
+  "targets": {
+    "test": {
+      "executor": "@angular/build:unit-test"
+    }
+  }
+}

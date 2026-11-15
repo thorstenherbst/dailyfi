@@ -1,0 +1,92 @@
+@use '../abstracts' as *;
+
+// Ersetzt Tailwinds Preflight. Bewusst schmaler: Preflight setzte `margin: 0`
+// auf alles — damit verlor <dialog> seine eigene Zentrierung (UA: margin auto).
+// Hier werden Abstaende nur dort genullt, wo sie stoeren.
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  tab-size: 4;
+}
+
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+// Formularelemente erben Schrift und Farbe statt der Browser-Vorgabe.
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+button,
+[role='button'] {
+  cursor: pointer;
+}
+
+:disabled {
+  cursor: not-allowed;
+}
+
+fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
+legend {
+  padding: 0;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+[hidden]:not([hidden='until-found']) {
+  display: none !important;
+}
+
+// <dialog> behaelt `margin: auto` aus dem UA-Stylesheet und damit seine
+// Zentrierung. Nur das Innenpolster kommt aus components/_modal.scss.
+dialog {
+  color: inherit;
+}

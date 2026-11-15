@@ -1,0 +1,184 @@
+@use 'abstracts' as *;
+
+// Inline-Zeile nach Brief: Felder in einer Reihe (bricht bei Platzmangel um),
+// Farbwahl als 28-px-Punkte mit Haken, Satz in Mono mit „€/h".
+
+:host {
+  display: block;
+}
+
+.row-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: space(2) space(3);
+}
+
+.row-plus {
+  align-self: center;
+  color: var(--text-muted);
+}
+
+.row-field {
+  display: flex;
+  flex-direction: column;
+  gap: space(1);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.row-field-name {
+  flex: 1 1 200px;
+  max-width: 360px;
+}
+
+// Eine gerenderte <legend> sitzt im Rahmen und ist kein Flex-Element; mit
+// float wird sie ein normales Kind und steht wie die Labels ueber dem Feld.
+legend.row-label {
+  float: left;
+  width: 100%;
+}
+
+.row-label {
+  padding: 0;
+  font-size: font-size(xs);
+  font-weight: font-weight(semibold);
+  color: var(--text-muted);
+}
+
+.row-fields .input {
+  min-height: size(control-h-sm) + 4px;
+}
+
+.row-client {
+  max-width: 200px;
+}
+
+// Farbwahl: native Radios, unsichtbar ueber dem Punkt — Tastatur und
+// Screenreader bekommen die echte Radiogruppe, das Ziel ist der ganze Punkt.
+.swatches {
+  clear: both;
+  display: flex;
+  align-items: center;
+  gap: space(2);
+  min-height: size(control-h-sm) + 4px;
+}
+
+.swatch {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: var(--p-fill);
+  color: var(--p-on);
+  cursor: pointer;
+
+  input {
+    position: absolute;
+    inset: -2px;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  // Gewaehlt: Haken (nicht nur Farbe) und Ring in --text.
+  &:has(:checked) {
+    border-color: var(--surface-raised);
+    box-shadow: 0 0 0 2px var(--text);
+  }
+
+  &:has(:focus-visible) {
+    @include focus-ring(4px);
+  }
+}
+
+.swatch-check {
+  --icon-size: 14px;
+  visibility: hidden;
+
+  :checked ~ & {
+    visibility: visible;
+  }
+}
+
+.swatch-name {
+  min-width: 64px;
+  margin-left: space(1);
+  font-size: font-size(sm);
+  color: var(--text-muted);
+}
+
+.unit {
+  position: relative;
+  display: block;
+
+  // Breit genug fuer den hoechsten Satz „99.999.999,99" (13 Zeichen Mono,
+  // `MAX_RATE`) plus eine Stelle fuer den Cursor, Innenabstand links, „€/h"
+  // rechts und den Rand — nichts wird abgeschnitten.
+  .input {
+    width: calc(14ch + #{space(3)} + 40px + 2px);
+    padding-right: 40px;
+    text-align: right;
+  }
+}
+
+.unit-suffix {
+  position: absolute;
+  top: 50%;
+  right: space(2);
+  transform: translateY(-50%);
+  font-size: font-size(sm);
+  color: var(--text-muted);
+}
+
+.row-actions {
+  display: flex;
+  gap: space(2);
+}
+
+.form-error,
+.row-hint {
+  margin-top: space(2);
+}
+
+.row-hint {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(1) space(3);
+}
+
+// Hinweis „Ungespeicherte Änderungen": Kasten mit Warn-Rand links, wie im Panel.
+.row-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(2) space(4);
+  margin-top: space(3);
+  padding: space(2) space(3);
+  border: 1px solid var(--warning);
+  border-left-width: 4px;
+  border-radius: radius(md);
+  background: var(--surface-raised);
+}
+
+.row-notice-text {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(1) space(2);
+  color: var(--warning);
+
+  b {
+    color: var(--text);
+  }
+}
+
+.row-notice-actions {
+  display: flex;
+  gap: space(2);
+}

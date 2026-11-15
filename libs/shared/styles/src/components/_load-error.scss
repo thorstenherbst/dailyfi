@@ -1,0 +1,40 @@
+@use '../abstracts' as *;
+
+// Fehlerzustand einer Seite, die nicht laden konnte: Symbol + Text + Knopf.
+.load-error {
+  display: flex;
+  gap: space(3);
+  align-items: flex-start;
+  max-width: 520px;
+  padding: space(5);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--danger);
+  border-radius: radius(lg);
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+.load-error-icon {
+  flex: none;
+  color: var(--danger);
+  --icon-size: 20px;
+}
+
+.load-error-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: space(2);
+
+  p {
+    margin: 0;
+  }
+}
+
+.load-error-title {
+  font-weight: font-weight(semibold);
+}
+
+.load-error-detail {
+  color: var(--text-muted);
+}

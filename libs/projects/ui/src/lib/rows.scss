@@ -1,0 +1,67 @@
+@use 'abstracts' as *;
+
+// Zeilen der Projekttabelle. Grundform (Kopf, 48-px-Zeilen, Gruppenzeilen,
+// Zahlen in Mono) kommt aus components/_table.scss; hier nur, was die Zeilen
+// selbst brauchen.
+
+.namecell {
+  display: flex;
+  align-items: center;
+  gap: space(2);
+  min-width: 0;
+}
+
+.name-cell {
+  font-weight: font-weight(medium);
+}
+
+:host(.group-row) th {
+  font-weight: font-weight(bold);
+}
+
+.color-name {
+  width: 220px;
+  color: var(--text-muted);
+  font-size: font-size(sm);
+}
+
+.num {
+  width: 140px;
+}
+
+.actions {
+  // Tooltips links neben der Knopfgruppe (_tooltip.scss), bis an die Knoepfe
+  // heran: der Innenabstand der Zelle (components/_table.scss).
+  --tooltip-group-inset: #{space(4)};
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+
+  .btn + .btn {
+    margin-left: space(1);
+  }
+}
+
+// Archiviertes bleibt lesbar — zurueckgenommen und als Text markiert.
+:host(.archived) th {
+  color: var(--text-muted);
+}
+
+// Bearbeiten-Modus: die Zeile wird selected-bg (Brief „Inline-Zeile").
+.editing-cell {
+  height: auto;
+  padding-block: space(3);
+}
+
+:host(.editing) > .editing-cell {
+  background: var(--selected-bg);
+}
+
+:host(.new-row) > .editing-cell {
+  height: 60px;
+  padding-block: space(2);
+}
+
+:host(.new-row.editing) > .editing-cell {
+  padding-block: space(3);
+}

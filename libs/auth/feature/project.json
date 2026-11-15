@@ -1,0 +1,16 @@
+{
+  "name": "auth-feature",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/auth/feature/src",
+  "projectType": "library",
+  "prefix": "app",
+  "tags": [
+    "domain:auth",
+    "type:feature"
+  ],
+  "targets": {
+    "test": {
+      "executor": "@angular/build:unit-test"
+    }
+  }
+}

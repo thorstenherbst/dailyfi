@@ -1,0 +1,97 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "strict": true,
+    "noUnusedLocals": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "preserve",
+    "paths": {
+      "@lib/auth/data-access": [
+        "./libs/auth/data-access/src/index.ts"
+      ],
+      "@lib/auth/domain": [
+        "./libs/auth/domain/src/index.ts"
+      ],
+      "@lib/auth/feature": [
+        "./libs/auth/feature/src/index.ts"
+      ],
+      "@lib/auth/ui": [
+        "./libs/auth/ui/src/index.ts"
+      ],
+      "@lib/projects/data-access": [
+        "./libs/projects/data-access/src/index.ts"
+      ],
+      "@lib/projects/domain": [
+        "./libs/projects/domain/src/index.ts"
+      ],
+      "@lib/projects/feature": [
+        "./libs/projects/feature/src/index.ts"
+      ],
+      "@lib/projects/ui": [
+        "./libs/projects/ui/src/index.ts"
+      ],
+      "@lib/reports/data-access": [
+        "./libs/reports/data-access/src/index.ts"
+      ],
+      "@lib/reports/domain": [
+        "./libs/reports/domain/src/index.ts"
+      ],
+      "@lib/reports/feature": [
+        "./libs/reports/feature/src/index.ts"
+      ],
+      "@lib/shared/domain": [
+        "./libs/shared/domain/src/index.ts"
+      ],
+      "@lib/shared/data-access-supabase": [
+        "./libs/shared/data-access-supabase/src/index.ts"
+      ],
+      "@lib/shared/data-access-supabase/testing": [
+        "./libs/shared/data-access-supabase/testing/src/index.ts"
+      ],
+      "@lib/shared/ui": [
+        "./libs/shared/ui/src/index.ts"
+      ],
+      "@lib/shared/util-browser": [
+        "./libs/shared/util-browser/src/index.ts"
+      ],
+      "@lib/shared/util-time": [
+        "./libs/shared/util-time/src/index.ts"
+      ],
+      "@lib/shared/util-edit": [
+        "./libs/shared/util-edit/src/index.ts"
+      ],
+      "@lib/week/data-access": [
+        "./libs/week/data-access/src/index.ts"
+      ],
+      "@lib/week/domain": [
+        "./libs/week/domain/src/index.ts"
+      ],
+      "@lib/week/feature": [
+        "./libs/week/feature/src/index.ts"
+      ],
+      "@lib/week/ui": [
+        "./libs/week/ui/src/index.ts"
+      ]
+    },
+    "rootDir": "."
+  },
+  "angularCompilerOptions": {
+    "strictTemplates": true,
+    "typeCheckHostBindings": true,
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true
+  },
+  "exclude": [
+    "node_modules",
+    "tmp"
+  ]
+}

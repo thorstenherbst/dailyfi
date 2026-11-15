@@ -1,0 +1,141 @@
+@use '../abstracts' as *;
+
+// ---------------------------------------------------------------------------
+// Farben und Schatten — ausschliesslich CSS Custom Properties.
+// Keine Farbe steht in einer SASS-Variable: nur so schaltet
+// der Dunkelmodus zur Laufzeit um.
+// ---------------------------------------------------------------------------
+
+:root {
+  --surface: #fbf9fe;
+  --surface-sunken: #f2eef9;
+  --surface-raised: #ffffff;
+  --grid-bg: #ffffff;
+  --text: #22173a;
+  --text-muted: #5f5475;
+  --border: #e5def0;
+  --border-strong: #83779a;
+  --primary: #6a2cd8;
+  --primary-hover: #5720ba;
+  --on-primary: #ffffff;
+  --focus: #c2187a;
+  --accent: #c2187a;
+  --hover-bg: #f4f0fb;
+  --selected-bg: #efe7fd;
+  --today-col: #fdf6fa;
+  --today-bg: #c2187a;
+  --today-text: #ffffff;
+  --success: #0f7744;
+  --warning: #985700;
+  --danger: #c4262e;
+  --danger-hover: #a51d24;
+  --on-danger: #ffffff;
+  --info: #3557d4;
+  --nav-bg: #2b1b47;
+  --nav-text: #ffffff;
+  --nav-text-muted: #c9bce3;
+  --nav-hover-bg: #4a3473;
+  --nav-brand: #ff9dd0;
+  --nav-edge: #2b1b47;
+  --toast-bg: #2b1b47;
+  --toast-text: #ffffff;
+  --toast-action: #ff9dd0;
+  --toast-success: #6ee7a8;
+  --toast-warning: #ffc857;
+  --toast-danger: #ff9494;
+  --toast-info: #a9b8ff;
+  // Hover des Schliessen-Knopfs: neutrales Grau, wirkt auf beiden Toast-Flaechen.
+  --toast-close-hover: rgb(127 127 127 / 0.22);
+
+  // Projektfarben: gefuellte Bloecke. Kobalt, Smaragd, Senf, Kupfer, Graphit, Petrol.
+  --pc1-fill: #2f5bd3;
+  --pc1-on: #ffffff;
+  --pc2-fill: #1a7a4a;
+  --pc2-on: #ffffff;
+  --pc3-fill: #8a6100;
+  --pc3-on: #ffffff;
+  --pc4-fill: #b3500e;
+  --pc4-on: #ffffff;
+  --pc5-fill: #4a4f57;
+  --pc5-on: #ffffff;
+  --pc6-fill: #0d7380;
+  --pc6-on: #ffffff;
+
+  --overlay: rgb(34 23 58 / 0.45);
+  --shadow: 0 16px 40px rgb(43 27 71 / 0.16), 0 2px 6px rgb(43 27 71 / 0.1);
+  --shadow-sm: 0 1px 2px rgb(43 27 71 / 0.12);
+
+  color-scheme: light;
+}
+
+// Eine Definition, zwei Wege (System-Einstellung und [data-theme='dark']).
+@include dark-theme {
+  --surface: #16111f;
+  --surface-sunken: #1d1729;
+  --surface-raised: #251e33;
+  --grid-bg: #1a1424;
+  --text: #f3eefb;
+  --text-muted: #b4a9c8;
+  --border: #352b46;
+  --border-strong: #857899;
+  --primary: #b794ff;
+  --primary-hover: #c9aeff;
+  --on-primary: #1b0f33;
+  --focus: #ff7ac0;
+  --accent: #ff7ac0;
+  --hover-bg: #2a2238;
+  --selected-bg: #2f2546;
+  --today-col: #201828;
+  --today-bg: #ff7ac0;
+  --today-text: #2a0618;
+  --success: #5ddb9a;
+  --warning: #ffc14d;
+  --danger: #ff8a8a;
+  --danger-hover: #ffa6a6;
+  --on-danger: #2a0808;
+  --info: #9fb0ff;
+  --nav-bg: #0f0b17;
+  --nav-text: #f3eefb;
+  --nav-text-muted: #b4a9c8;
+  --nav-hover-bg: #2d2343;
+  --nav-brand: #ff9dd0;
+  --nav-edge: #b794ff;
+  --toast-bg: #f3eefb;
+  --toast-text: #22173a;
+  --toast-action: #a0136a;
+  --toast-success: #13804b;
+  --toast-warning: #8f5200;
+  --toast-danger: #c4262e;
+  --toast-info: #3557d4;
+
+  --pc1-fill: #86a8ff;
+  --pc1-on: #170f24;
+  --pc2-fill: #5fcc90;
+  --pc2-on: #170f24;
+  --pc3-fill: #e2b84a;
+  --pc3-on: #170f24;
+  --pc4-fill: #f5a465;
+  --pc4-on: #170f24;
+  --pc5-fill: #b8bdc6;
+  --pc5-on: #170f24;
+  --pc6-fill: #52c8d2;
+  --pc6-on: #170f24;
+
+  --overlay: rgb(5 3 10 / 0.65);
+  --shadow: 0 16px 40px rgb(0 0 0 / 0.5), 0 2px 6px rgb(0 0 0 / 0.4);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+
+  color-scheme: dark;
+}
+
+// ---------------------------------------------------------------------------
+// Buildzeit-Tokens, die zur Laufzeit gelesen werden — generiert aus den
+// SASS-Maps in abstracts/_tokens.scss (eine Quelle). Nur diese:
+//   --hour-h, --axis-w      Raster (Stundenlinien, Spaltenraster)
+//   --dur-open-delay/-close-delay  JS-Timer des Rund-Menues
+// Alles andere setzen Komponenten zur Buildzeit per space(), radius() …
+// ---------------------------------------------------------------------------
+:root {
+  @include custom-properties($layout, (hour-h, axis-w));
+  @include custom-properties($duration, (open-delay, close-delay), 'dur-');
+}

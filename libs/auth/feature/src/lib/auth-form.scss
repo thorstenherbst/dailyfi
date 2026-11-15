@@ -1,0 +1,58 @@
+@use 'abstracts' as *;
+
+// Gemeinsame Form der drei Auth-Seiten. Buttons, Felder und Fehlertexte kommen
+// aus der Styles-Lib — hier steht nur, was die Karte anordnet.
+
+form,
+.sent {
+  display: flex;
+  flex-direction: column;
+  gap: space(5);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+}
+
+.actions .btn {
+  width: 100%;
+}
+
+// „Mail ist unterwegs": Box mit Symbol, bleibt in der Karte stehen.
+.sent {
+  gap: space(3);
+  padding: space(4);
+  border-radius: radius(md);
+  background: var(--surface-sunken);
+}
+
+.sent-head {
+  display: flex;
+  align-items: center;
+  gap: space(2);
+  color: var(--success);
+  --icon-size: 20px;
+}
+
+.sent-title {
+  display: inline-block;
+  color: var(--text);
+  font-size: font-size(md);
+}
+
+.sent strong {
+  overflow-wrap: anywhere;
+}
+
+.footer {
+  padding-top: space(4);
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: font-size(base);
+}
+
+.footer a {
+  font-weight: font-weight(semibold);
+}

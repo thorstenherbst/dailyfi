@@ -1,0 +1,58 @@
+@use '../abstracts' as *;
+
+// Gemeinsame Grundform der beiden <dialog>-Modals (Warn-Modal, Sitzung
+// abgelaufen). Die Zentrierung kommt aus dem UA-Stylesheet (margin: auto),
+// das base/_reset.scss bewusst nicht ueberschreibt.
+.modal {
+  width: min(440px, calc(100vw - #{space(8)}));
+  max-height: calc(100dvh - #{space(8)});
+  padding: space(6);
+  border: 1px solid var(--border);
+  border-radius: radius(lg);
+  background: var(--surface-raised);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  overflow: auto;
+
+  &::backdrop {
+    background: var(--overlay);
+  }
+}
+
+.modal-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: space(4);
+  border-radius: radius(md);
+  background: var(--surface-sunken);
+  --icon-size: 22px;
+
+  &.is-danger {
+    color: var(--danger);
+  }
+
+  &.is-info {
+    color: var(--info);
+  }
+}
+
+.modal-title {
+  display: inline-block; // Fokusring umschliesst den Titel, nicht die Zeile
+  margin: 0 0 space(2);
+  font-size: font-size(xl);
+}
+
+.modal-text {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: space(2);
+  margin-top: space(6);
+}

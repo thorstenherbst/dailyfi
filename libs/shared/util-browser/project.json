@@ -1,0 +1,10 @@
+{
+  "name": "shared-util-browser",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/util-browser/src",
+  "projectType": "library",
+  "prefix": "app",
+  "tags": ["domain:shared", "type:util"],
+  "// targets": "to see all targets run: nx show project shared-util-browser --web",
+  "targets": {}
+}

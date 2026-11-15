@@ -1,0 +1,86 @@
+@use 'sass:map';
+@use 'tokens';
+@use 'functions' as fn;
+
+/// Ab Breakpoint aufwaerts: @include from(lg) { … }
+@mixin from($key) {
+  @media (min-width: fn.bp($key)) {
+    @content;
+  }
+}
+
+/// Unterhalb des Breakpoints: @include below(lg) { … } (≤ 1023,98 px)
+@mixin below($key) {
+  @media (max-width: (fn.bp($key) - 0.02px)) {
+    @content;
+  }
+}
+
+/// Fokusring nach Brief: 2 px solid var(--focus), Abstand 2 px.
+@mixin focus-ring($offset: 2px, $width: 2px) {
+  outline: $width solid var(--focus);
+  outline-offset: $offset;
+}
+
+/// Unsichtbar, aber vorgelesen.
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/// Typo-Stufe aus der Skala: Groesse, optional Gewicht. Die Zeilenhoehe erbt
+/// (Text 1,5 aus base/_typography, Ueberschriften 1,2).
+@mixin type($size, $weight: null) {
+  font-size: fn.font-size($size);
+  @if $weight {
+    font-weight: fn.font-weight($weight);
+  }
+}
+
+/// Zahlen, Uhrzeiten, Betraege: JetBrains Mono mit Tabellenziffern.
+@mixin mono {
+  font-family: fn.font-family(mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: normal;
+}
+
+/// Dunkelmodus aus EINER Definition: der Inhalt landet sowohl in der
+/// System-Variante (prefers-color-scheme, ausser explizit hell) als auch im
+/// expliziten [data-theme='dark']. Nur im :root-Kontext verwenden.
+@mixin dark-theme {
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      @content;
+    }
+  }
+
+  :root[data-theme='dark'] {
+    @content;
+  }
+}
+
+/// Gibt ausgewaehlte Eintraege einer SASS-Map als Custom Properties aus:
+/// --#{$prefix}#{$key}. Nur, was zur Laufzeit gelesen wird — die Map bleibt
+/// vollstaendig und die einzige Quelle.
+@mixin custom-properties($map, $keys, $prefix: '') {
+  @each $key in $keys {
+    @if not map.has-key($map, $key) {
+      @error 'custom-properties: #{$key} fehlt in der Map';
+    }
+    --#{$prefix}#{$key}: #{map.get($map, $key)};
+  }
+}
+
+/// Bewegung nur, wenn sie gewollt ist.
+@mixin motion {
+  @media (prefers-reduced-motion: no-preference) {
+    @content;
+  }
+}
