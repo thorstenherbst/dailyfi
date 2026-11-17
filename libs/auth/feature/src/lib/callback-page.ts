@@ -2,7 +2,12 @@ import { ChangeDetectionStrategy, Component, PendingTasks, inject, signal } from
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { SessionStore } from '@lib/auth/data-access';
-import { forgetInviteCode, readInviteCode } from '@lib/auth/domain';
+import {
+  forgetDpaConsent,
+  forgetInviteCode,
+  readDpaConsent,
+  readInviteCode,
+} from '@lib/auth/domain';
 import { AuthCard } from '@lib/auth/ui';
 import { Icon } from '@lib/shared/ui';
 
@@ -19,7 +24,8 @@ interface CallbackParams {
 
 /**
  * Rücksprung aus der Mail. Tauscht den Code gegen eine Session, löst einen
- * gemerkten Einladungscode ein und schickt weiter — `/week`, wenn alles steht,
+ * gemerkten Einladungscode ein, speichert eine gemerkte Zustimmung zum
+ * AV-Vertrag und schickt weiter — `/week`, wenn alles steht,
  * sonst `/register`.
  *
  * Die Route muss in `app.routes.ts` **vor** der Wildcard stehen, sonst leitet
@@ -112,7 +118,7 @@ export class CallbackPage {
    * vorher gab es keine Session, an der `auth.uid()` hängt.
    */
   private async redeemPendingCode(): Promise<void> {
-    const pending = readInviteCode();
+    const pending = readInviteCode(this.session.user()?.email ?? '');
 
     if (pending && !this.session.hasBetaAccess()) {
       const redeemed = await this.session.redeemInviteCode(pending);
@@ -144,7 +150,24 @@ export class CallbackPage {
   }
 
   private async routeOn(): Promise<void> {
-    await this.goTo((await this.session.ensureAccess()) ? '/week' : '/register');
+    const hasAccess = await this.session.ensureAccess();
+    if (hasAccess) {
+      await this.acceptPendingDpa();
+    }
+    await this.goTo(hasAccess ? '/week' : '/register');
+  }
+
+  /**
+   * Die auf `/register` erteilte Zustimmung. Gespeichert wird die Version, der
+   * dort zugestimmt wurde; ist sie nicht mehr die aktuelle oder scheitert das
+   * Speichern, fragt `requireDpa` auf der Zustimmungsseite nach.
+   */
+  private async acceptPendingDpa(): Promise<void> {
+    const version = readDpaConsent(this.session.user()?.email ?? '');
+    if (version) {
+      await this.session.acceptDpa(version);
+      forgetDpaConsent();
+    }
   }
 
   private async goTo(path: string, reason?: string): Promise<void> {

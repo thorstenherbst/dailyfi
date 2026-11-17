@@ -1,0 +1,16 @@
+{
+  "name": "legal-feature",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/legal/feature/src",
+  "projectType": "library",
+  "prefix": "app",
+  "tags": [
+    "domain:legal",
+    "type:feature"
+  ],
+  "targets": {
+    "test": {
+      "executor": "@angular/build:unit-test"
+    }
+  }
+}

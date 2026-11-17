@@ -50,6 +50,7 @@ Fachlichkeit liegt in Libs unter `libs/<domäne>/<schicht>`, importiert über `@
 | `projects` | `feature`, `ui`, `domain`, `data-access` |
 | `reports` | `feature`, `domain`, `data-access` |
 | `auth` | `feature`, `ui`, `domain`, `data-access` |
+| `legal` | `feature`, `domain` |
 | `shared` | `ui`, `domain`, `data-access-supabase`, `util-time`, `util-browser`, `util-edit`, `styles` |
 
 Jede Lib trägt einen Tag `type:*` und einen Tag `domain:*`. `@nx/enforce-module-boundaries` in
@@ -65,6 +66,7 @@ Jede Lib trägt einen Tag `type:*` und einen Tag `domain:*`. `@nx/enforce-module
 | `type:util` | `type:util` |
 | `type:styles` | nur über SCSS eingebunden, von keiner Lib importierbar |
 | `domain:X` | `domain:X`, `domain:shared` |
+| `domain:auth` | zusätzlich `domain:legal` (Fassung des AV-Vertrags für die Zustimmung) |
 
 Libs importieren nie aus `apps/`. Was sie von der App brauchen, kommt über Injection-Tokens
 (`SUPABASE_CONFIG`, `USER_FEEDBACK`, `SESSION_RECOVERY`, `LEAVE_WITHOUT_ASKING`), die

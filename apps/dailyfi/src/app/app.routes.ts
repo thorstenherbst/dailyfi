@@ -1,7 +1,19 @@
 import { Routes } from '@angular/router';
 
-import { guestOnly, inviteCodeOnly, requireAccount } from '@lib/auth/data-access';
-import { loadCallbackPage, loadLoginPage, loadRegisterPage } from '@lib/auth/feature';
+import {
+  dpaPending,
+  guestOnly,
+  inviteCodeOnly,
+  requireAccount,
+  requireDpa,
+} from '@lib/auth/data-access';
+import {
+  loadCallbackPage,
+  loadConsentPage,
+  loadLoginPage,
+  loadRegisterPage,
+} from '@lib/auth/feature';
+import { loadDpaPage, loadImprintPage, loadPrivacyPage } from '@lib/legal/feature';
 import { loadProjectsPage } from '@lib/projects/feature';
 import { loadReportsPage } from '@lib/reports/feature';
 import { unsavedChangesGuard } from '@lib/shared/util-edit';
@@ -28,10 +40,18 @@ export const routes: Routes = [
     title: 'Anmeldung — Dailyfi',
     loadComponent: loadCallbackPage,
   },
+  // Zustimmung zum AV-Vertrag. Nur `requireAccount`: hierher schickt
+  // `requireDpa`, also darf die Seite nicht selbst daran haengen.
+  {
+    path: 'zustimmung',
+    title: 'Zustimmung — Dailyfi',
+    canActivate: [requireAccount, dpaPending],
+    loadComponent: loadConsentPage,
+  },
   {
     path: 'week',
     title: 'Woche — Dailyfi',
-    canActivate: [requireAccount],
+    canActivate: [requireAccount, requireDpa],
     // Ungespeichertes im Panel: Hinweis statt stillem Verwerfen.
     canDeactivate: [unsavedChangesGuard],
     loadComponent: loadWeekPage,
@@ -39,7 +59,7 @@ export const routes: Routes = [
   {
     path: 'projects',
     title: 'Projekte — Dailyfi',
-    canActivate: [requireAccount],
+    canActivate: [requireAccount, requireDpa],
     // Ungespeichertes in einer Zeile: Hinweis in der Zeile statt stillem Verwerfen.
     canDeactivate: [unsavedChangesGuard],
     loadComponent: loadProjectsPage,
@@ -47,8 +67,24 @@ export const routes: Routes = [
   {
     path: 'reports',
     title: 'Reports — Dailyfi',
-    canActivate: [requireAccount],
+    canActivate: [requireAccount, requireDpa],
     loadComponent: loadReportsPage,
+  },
+  // Rechtstexte ohne Guard: abgemeldet wie angemeldet erreichbar.
+  {
+    path: 'impressum',
+    title: 'Impressum — Dailyfi',
+    loadComponent: loadImprintPage,
+  },
+  {
+    path: 'datenschutz',
+    title: 'Datenschutz — Dailyfi',
+    loadComponent: loadPrivacyPage,
+  },
+  {
+    path: 'avv',
+    title: 'AV-Vertrag — Dailyfi',
+    loadComponent: loadDpaPage,
   },
   { path: '**', redirectTo: 'week' },
 ];

@@ -470,4 +470,82 @@ describe('SessionStore', () => {
       expect(logged).not.toHaveBeenCalled();
     });
   });
+
+  describe('Zustimmung zum AV-Vertrag', () => {
+    const member = (fake: FakeSupabase): void => {
+      fake.user = { id: 'u1', email: 'thorsten@dailyfi.test' };
+      fake.betaAccess = true;
+    };
+
+    it('merkt sich eine Zustimmung fuer die Sitzung', async () => {
+      const { fake, store } = setup((f) => {
+        member(f);
+        f.dpaAcceptances = ['1.0'];
+      });
+      await store.restore();
+
+      expect(await store.hasAcceptedDpa('1.0')).toBe(true);
+      expect(await store.hasAcceptedDpa('1.0')).toBe(true);
+      expect(fake.dpaReads).toBe(1);
+    });
+
+    it('fragt ein „nein" beim naechsten Mal wieder nach', async () => {
+      const { fake, store } = setup(member);
+      await store.restore();
+
+      expect(await store.hasAcceptedDpa('1.0')).toBe(false);
+      // Zugestimmt in einem anderen Tab.
+      fake.dpaAcceptances = ['1.0'];
+      expect(await store.hasAcceptedDpa('1.0')).toBe(true);
+      expect(fake.dpaReads).toBe(2);
+    });
+
+    it('speichert die Zustimmung und braucht danach keine Abfrage', async () => {
+      const { fake, store } = setup(member);
+      await store.restore();
+
+      expect(await store.acceptDpa('1.0')).toBe(true);
+      expect(fake.acceptDpaCalls).toEqual(['1.0']);
+      expect(await store.hasAcceptedDpa('1.0')).toBe(true);
+      expect(fake.dpaReads).toBe(0);
+    });
+
+    it('meldet ein gescheitertes Speichern', async () => {
+      const { store } = setup((f) => {
+        member(f);
+        f.acceptDpaError = { message: 'connection reset' };
+      });
+      await store.restore();
+
+      expect(await store.acceptDpa('1.0')).toBe(false);
+    });
+
+    it('verwirft die gemerkte Zustimmung beim Abmelden', async () => {
+      const { fake, store } = setup((f) => {
+        member(f);
+        f.dpaAcceptances = ['1.0'];
+      });
+      await store.restore();
+      await store.hasAcceptedDpa('1.0');
+
+      await store.signOut();
+      expect(await store.hasAcceptedDpa('1.0')).toBe(false);
+
+      // Wieder angemeldet: es wird neu gefragt, nicht aus der alten Sitzung geantwortet.
+      fake.emitAuthEvent('SIGNED_IN', { id: 'u1', email: 'thorsten@dailyfi.test' });
+      fake.dpaAcceptances = [];
+      expect(await store.hasAcceptedDpa('1.0')).toBe(false);
+      expect(fake.dpaReads).toBe(2);
+    });
+
+    it('fragt ohne Session nicht und speichert nichts', async () => {
+      const { fake, store } = setup();
+      await store.restore();
+
+      expect(await store.hasAcceptedDpa('1.0')).toBe(false);
+      expect(await store.acceptDpa('1.0')).toBe(false);
+      expect(fake.dpaReads).toBe(0);
+      expect(fake.acceptDpaCalls).toEqual([]);
+    });
+  });
 });

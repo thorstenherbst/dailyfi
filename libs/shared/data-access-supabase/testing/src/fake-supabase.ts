@@ -55,6 +55,16 @@ export class FakeSupabase {
    */
   refreshGate: Promise<void> | null = null;
 
+  /** Versionen des AV-Vertrags, denen der angemeldete Nutzer zugestimmt hat. */
+  dpaAcceptances: string[] = [];
+  /** Wie oft `dpa_acceptances` gelesen wurde — fuer den Zwischenspeicher. */
+  dpaReads = 0;
+  dpaReadError: FakeAuthError | null = null;
+  /** Fehler von `accept_dpa`; die Zustimmung wird dann nicht gespeichert. */
+  acceptDpaError: FakeAuthError | null = null;
+  /** Versionen, die `accept_dpa` bekommen hat, in Reihenfolge. */
+  acceptDpaCalls: string[] = [];
+
   /** `signOut()` wirft statt zurueckzugeben (Speicher gesperrt o. ae.). */
   signOutThrows: Error | null = null;
 
@@ -146,7 +156,39 @@ export class FakeSupabase {
     },
   };
 
+  /** Nur `dpa_acceptances`, nur `select(...).eq('version', …)`. */
+  from(table: string) {
+    if (table !== 'dpa_acceptances') {
+      throw new Error(`Unerwartete Tabelle: ${table}`);
+    }
+    return {
+      select: () => ({
+        eq: async (column: string, value: string) => {
+          this.dpaReads += 1;
+          if (this.dpaReadError) {
+            return { data: null, error: this.dpaReadError };
+          }
+          const rows = this.user
+            ? this.dpaAcceptances.filter((version) => column === 'version' && version === value)
+            : [];
+          return { data: rows.map((version) => ({ version })), error: null };
+        },
+      }),
+    };
+  }
+
   async rpc(name: string, args?: Record<string, unknown>) {
+    if (name === 'accept_dpa') {
+      const version = String(args?.['p_version'] ?? '');
+      this.acceptDpaCalls.push(version);
+      if (this.acceptDpaError) {
+        return { data: null, error: this.acceptDpaError };
+      }
+      if (!this.dpaAcceptances.includes(version)) {
+        this.dpaAcceptances.push(version);
+      }
+      return { data: null, error: null };
+    }
     if (name === 'has_beta_access') {
       this.onBetaCheck?.();
       return this.rpcError

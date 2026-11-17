@@ -75,6 +75,18 @@ b {
   margin-left: auto;
 }
 
+// Ziel mindestens 24 × 24 px; waechst nie und bricht nie um.
+.legal {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: 24px;
+  padding-inline: space(1);
+  border-radius: radius(sm);
+  color: inherit;
+  white-space: nowrap;
+}
+
 .email {
   min-width: 0;
   overflow: hidden;

@@ -52,9 +52,13 @@ export class App {
    * Menue und Statusleiste nur fuer, wer wirklich in die Anwendung darf. Ohne
    * Freischaltung (Registrierung mit Session) fuehrte jedes Ziel per Guard
    * zurueck auf `/register` — die Seite hat dafuer ihr eigenes „Abmelden".
+   * Dasselbe gilt fuer die Zustimmung zum AV-Vertrag: bis dahin fuehrt jedes
+   * Ziel zurueck auf `/zustimmung`.
    */
   protected readonly shell = computed(() =>
-    this.session.hasBetaAccess() ? this.session.user() : null,
+    this.session.hasBetaAccess() && pathOf(this.url()) !== '/zustimmung'
+      ? this.session.user()
+      : null,
   );
 
   private readonly url = toSignal(

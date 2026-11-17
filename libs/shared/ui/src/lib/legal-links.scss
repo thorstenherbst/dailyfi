@@ -1,0 +1,47 @@
+@use 'abstracts' as *;
+
+:host {
+  display: block;
+}
+
+ul {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+}
+
+li {
+  display: inline-flex;
+  align-items: center;
+}
+
+li + li::before {
+  content: '·' / '';
+  padding-inline: space(1);
+}
+
+// Zielgroesse mindestens 24 × 24 px, auch in der 32 px hohen Statusleiste.
+a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  min-width: 24px;
+  padding-inline: space(1);
+  border-radius: radius(sm);
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+
+  &:hover {
+    color: var(--text);
+    text-decoration-color: currentColor;
+  }
+}
+
+// Die aktuelle Seite: kraeftiger und ohne Unterstreichung, nicht nur farbig.
+.is-current {
+  color: var(--text);
+  font-weight: font-weight(semibold);
+  text-decoration: none;
+}

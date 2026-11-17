@@ -37,6 +37,7 @@ async function setup(signedIn: boolean): Promise<{
         { path: 'login', component: Blank },
         { path: 'register', component: Blank },
         { path: 'auth/callback', component: Blank },
+        { path: 'zustimmung', component: Blank },
       ]),
       { provide: SUPABASE, useValue: fake.asClient() },
       // Wie in app.config.ts.
@@ -142,6 +143,17 @@ describe('App', () => {
       '/reports',
     ]);
     expect(links.map((link) => link.textContent?.trim())).toEqual(['Woche', 'Projekte', 'Reports']);
+  });
+
+  it('zeigt auf der Zustimmungsseite weder Menü noch Statusleiste', async () => {
+    const { fixture, element } = await setup(true);
+
+    await TestBed.inject(Router).navigateByUrl('/zustimmung?returnUrl=%2Fweek');
+    fixture.detectChanges();
+
+    // Jedes Ziel fuehrte per Guard zurueck auf /zustimmung.
+    expect(element.querySelector('app-nav-menu')).toBeNull();
+    expect(element.querySelector('app-status-bar')).toBeNull();
   });
 
   it('zeigt angemeldet in der Statusleiste, welches Konto offen ist', async () => {

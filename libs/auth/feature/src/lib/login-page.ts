@@ -10,6 +10,7 @@ import {
 import { RouterLink } from '@angular/router';
 
 import { SessionStore } from '@lib/auth/data-access';
+import { forgetDpaConsent, forgetInviteCode } from '@lib/auth/domain';
 import { AuthCard } from '@lib/auth/ui';
 import { Icon } from '@lib/shared/ui';
 
@@ -143,6 +144,12 @@ export class LoginPage {
       this.errorMessage.set('Bitte eine gültige E-Mail-Adresse eingeben.');
       return;
     }
+
+    // Wer sich anmeldet, registriert sich nicht: ein Einladungscode oder eine
+    // Zustimmung, die hier von einer frueheren Registrierung liegt, gehoert
+    // nicht zu diesem Login und darf beim Ruecksprung nicht eingeloest werden.
+    forgetInviteCode();
+    forgetDpaConsent();
 
     this.pending.set(true);
     this.errorMessage.set(null);

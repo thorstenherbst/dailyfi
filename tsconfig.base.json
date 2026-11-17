@@ -26,6 +26,12 @@
       "@lib/auth/ui": [
         "./libs/auth/ui/src/index.ts"
       ],
+      "@lib/legal/domain": [
+        "./libs/legal/domain/src/index.ts"
+      ],
+      "@lib/legal/feature": [
+        "./libs/legal/feature/src/index.ts"
+      ],
       "@lib/projects/data-access": [
         "./libs/projects/data-access/src/index.ts"
       ],

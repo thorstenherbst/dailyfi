@@ -52,10 +52,11 @@ function isMissingVerifier(error: { code?: string; message?: string } | null): b
 }
 
 /**
- * Anmeldestatus der Anwendung: wer angemeldet ist und ob dieses Konto einen
- * Einladungscode eingeloest hat.
+ * Anmeldestatus der Anwendung: wer angemeldet ist, ob dieses Konto einen
+ * Einladungscode eingeloest hat und welcher Fassung des AV-Vertrags es
+ * zugestimmt hat.
  *
- * Beides ist hier nur eine Kopie fuer die Oberflaeche. Verbindlich ist der
+ * Alles ist hier nur eine Kopie fuer die Oberflaeche. Verbindlich ist der
  * Server: `has_beta_access()` steckt als Bedingung in jeder RLS-Policy, ein
  * manipuliertes Signal in dieser Klasse gibt also keine Daten frei.
  */
@@ -87,6 +88,15 @@ export class SessionStore implements SessionRecovery {
    * Anmeldung — beim ersten Laden ohne Session greift der Guard.
    */
   readonly sessionExpired = this.expired.asReadonly();
+
+  /**
+   * Versionen des AV-Vertrags, denen dieses Konto nachweislich zugestimmt hat.
+   * Nur Zusagen werden gemerkt: ein „nein" fragt beim naechsten Mal nach, damit
+   * eine Zustimmung aus einem anderen Tab nicht ausgesperrt bleibt. Gilt fuer
+   * eine Sitzung; mit dem Abmelden oder einem Kontowechsel ist sie leer
+   * (`applyUser`).
+   */
+  private acceptedDpaVersions = new Set<string>();
 
   /** Laeuft genau einmal — `restore()` darf von jedem Guard gerufen werden. */
   private restoring: Promise<void> | null = null;
@@ -214,6 +224,65 @@ export class SessionStore implements SessionRecovery {
       return data;
     }
     return data === 'locked' ? 'locked' : 'invalid';
+  }
+
+  /**
+   * Hat dieses Konto der Version `version` des AV-Vertrags zugestimmt? Liest
+   * die eigene Zeile in `dpa_acceptances` (RLS: nur die eigenen). Ohne Session
+   * oder bei einem Fehler `false` — dann fragt die Zustimmungsseite, und ein
+   * zweites Zustimmen schadet nicht.
+   */
+  async hasAcceptedDpa(version: string): Promise<boolean> {
+    await this.restore();
+    const askedFor = this.currentUser()?.id ?? null;
+    if (askedFor === null) {
+      return false;
+    }
+    if (this.acceptedDpaVersions.has(version)) {
+      return true;
+    }
+
+    const { data, error } = await this.db
+      .from('dpa_acceptances')
+      .select('version')
+      .eq('version', version);
+
+    if (this.currentUser()?.id !== askedFor) {
+      return false;
+    }
+    if (error) {
+      this.logAuthIssue('Zustimmung zum AV-Vertrag konnte nicht geprueft werden:', error);
+      return false;
+    }
+
+    const accepted = (data ?? []).length > 0;
+    if (accepted) {
+      this.acceptedDpaVersions.add(version);
+    }
+    return accepted;
+  }
+
+  /**
+   * Zustimmung zur Version `version` speichern. Den Zeitpunkt setzt der Server
+   * (`accept_dpa()`); zweimal zustimmen ist kein Fehler. `false` heisst: nicht
+   * gespeichert — die Seite entscheidet, wie sie das meldet.
+   */
+  async acceptDpa(version: string): Promise<boolean> {
+    const askedFor = this.currentUser()?.id ?? null;
+    if (askedFor === null) {
+      return false;
+    }
+
+    const { error } = await this.db.rpc('accept_dpa', { p_version: version });
+
+    if (error) {
+      this.logAuthIssue('Zustimmung zum AV-Vertrag konnte nicht gespeichert werden:', error);
+      return false;
+    }
+    if (this.currentUser()?.id === askedFor) {
+      this.acceptedDpaVersions.add(version);
+    }
+    return true;
   }
 
   async signOut(): Promise<void> {
@@ -374,9 +443,11 @@ export class SessionStore implements SessionRecovery {
   private applyUser(raw: { id: string; email?: string | null } | null): void {
     const next: SessionUser | null = raw ? { id: raw.id, email: raw.email ?? '' } : null;
 
-    // Ein anderes Konto heisst: der gepruefte Zugang von vorhin gilt nicht mehr.
+    // Ein anderes Konto heisst: der gepruefte Zugang und die Zustimmung von
+    // vorhin gelten nicht mehr. Abmelden ist der Wechsel zu „niemand".
     if (this.currentUser()?.id !== next?.id) {
       this.betaAccess.set(false);
+      this.acceptedDpaVersions = new Set();
     }
     this.currentUser.set(next);
   }

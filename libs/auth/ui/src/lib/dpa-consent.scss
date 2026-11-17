@@ -1,0 +1,36 @@
+@use 'abstracts' as *;
+
+// Kantenlaenge der Checkbox aus `.check` (components/_field).
+$box: 18px;
+
+// `.check` aus der Styles-Lib ist fuer eine Zeile gebaut. Hier steht ein Satz:
+// oben ausrichten, umbrechen, in normaler Textfarbe.
+.check {
+  align-items: flex-start;
+  color: var(--text);
+
+  input {
+    flex: none;
+    // Mittig zur ersten Textzeile.
+    margin-top: calc((#{font-size(sm)} * #{line-height(text)} - #{$box}) / 2);
+  }
+
+  input[aria-invalid='true'] {
+    @include focus-ring(2px);
+    outline-color: var(--danger);
+  }
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 space(2);
+
+  // Zielgroesse mindestens 24 px.
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+  }
+}

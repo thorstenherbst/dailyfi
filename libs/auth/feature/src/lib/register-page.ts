@@ -11,8 +11,15 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { SessionStore } from '@lib/auth/data-access';
-import { forgetInviteCode, readInviteCode, rememberInviteCode } from '@lib/auth/domain';
-import { AuthCard } from '@lib/auth/ui';
+import {
+  forgetDpaConsent,
+  forgetInviteCode,
+  readInviteCode,
+  rememberDpaConsent,
+  rememberInviteCode,
+} from '@lib/auth/domain';
+import { AuthCard, DpaConsent } from '@lib/auth/ui';
+import { DPA_VERSION } from '@lib/legal/domain';
 import { Icon } from '@lib/shared/ui';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -25,6 +32,7 @@ const LOCKED =
   'Zu viele Fehlversuche. Bitte in einer Viertelstunde noch einmal versuchen — oder frag nach ' +
   'einem neuen Code.';
 const SERVER_ERROR = 'Der Einladungscode konnte gerade nicht geprüft werden.';
+const DPA_MISSING = 'Bitte bestätige, dass du dem AV-Vertrag zustimmst.';
 
 /** Warum der Rücksprung hierher geschickt hat. */
 const REASONS: Record<string, string> = {
@@ -45,11 +53,17 @@ const REASONS: Record<string, string> = {
  *   Code beim Rücksprung nicht getragen hat, wer den Link in einem anderen
  *   Browser geöffnet hat — oder wen eine Serverstörung beim Einlösen erwischt
  *   hat. Im letzten Fall steht der Code noch im Feld.
+ *
+ * In beiden Zuständen ist die Zustimmung zum AV-Vertrag Pflicht. Gespeichert
+ * wird sie erst mit eingelöstem Code (`accept_dpa()` verlangt Beta-Zugang):
+ * mit Session gleich hier, sonst merkt sie sich der Browser bis zum Rücksprung
+ * (`rememberDpaConsent`). Geht dabei etwas schief, fängt `requireDpa` es ab
+ * und schickt auf die Zustimmungsseite.
  */
 @Component({
   selector: 'app-register-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AuthCard, Icon, RouterLink],
+  imports: [AuthCard, DpaConsent, Icon, RouterLink],
   styleUrl: './auth-form.scss',
   template: `
     <app-auth-card [heading]="heading()" [lead]="lead()">
@@ -113,6 +127,13 @@ const REASONS: Record<string, string> = {
             </div>
           }
 
+          <app-dpa-consent
+            inputId="register-dpa"
+            [accepted]="dpaAccepted()"
+            (acceptedChange)="onDpaChange($event)"
+            [error]="dpaError()"
+          />
+
           @if (errorMessage(); as message) {
             <p class="form-error" id="register-error" role="alert">
               <app-icon name="warn" /> {{ message }}
@@ -144,6 +165,7 @@ export class RegisterPage {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly sentHeading = viewChild<ElementRef<HTMLElement>>('sentHeading');
+  private readonly dpaConsent = viewChild(DpaConsent);
 
   protected readonly code = signal('');
   protected readonly email = signal('');
@@ -151,6 +173,8 @@ export class RegisterPage {
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly sentTo = signal<string | null>(null);
   protected readonly liveMessage = signal('');
+  protected readonly dpaAccepted = signal(false);
+  protected readonly dpaError = signal<string | null>(null);
 
   protected readonly signedIn = this.session.signedIn;
 
@@ -170,7 +194,7 @@ export class RegisterPage {
     // Nach einer Störung oder einer Sperre liegt der Code noch im Speicher —
     // eintragen, damit ein Klick reicht.
     if (reason === 'server-error' || reason === 'locked') {
-      this.code.set(readInviteCode() ?? '');
+      this.code.set(readInviteCode(this.session.user()?.email ?? '') ?? '');
     }
 
     effect(() => {
@@ -204,6 +228,15 @@ export class RegisterPage {
     this.errorMessage.set(null);
     this.liveMessage.set('');
     forgetInviteCode();
+    forgetDpaConsent();
+  }
+
+  /** Mit dem Haken ist der Fehler am Feld erledigt. */
+  protected onDpaChange(accepted: boolean): void {
+    this.dpaAccepted.set(accepted);
+    if (accepted) {
+      this.dpaError.set(null);
+    }
   }
 
   protected async onSignOut(): Promise<void> {
@@ -223,12 +256,16 @@ export class RegisterPage {
     // Beide Felder auf einmal prüfen: sonst nennt das leere Formular erst den
     // Code und die fehlende Adresse erst im zweiten Anlauf.
     const missing = this.complain(code, address);
+    this.errorMessage.set(missing);
+    this.dpaError.set(this.dpaAccepted() ? null : DPA_MISSING);
+    if (!this.dpaAccepted()) {
+      this.dpaConsent()?.focus();
+      return;
+    }
     if (missing) {
-      this.errorMessage.set(missing);
       return;
     }
 
-    this.errorMessage.set(null);
     this.pending.set(true);
     try {
       await (this.signedIn() ? this.redeem(code) : this.requestLink(code, address));
@@ -273,6 +310,8 @@ export class RegisterPage {
     }
 
     forgetInviteCode();
+    // Scheitert das Speichern, schickt `requireDpa` auf die Zustimmungsseite.
+    await this.session.acceptDpa(DPA_VERSION);
     await this.router.navigate(['/week']);
   }
 
@@ -295,7 +334,8 @@ export class RegisterPage {
       return;
     }
 
-    rememberInviteCode(code);
+    rememberInviteCode(code, address);
+    rememberDpaConsent(DPA_VERSION, address);
     this.sentTo.set(address);
     this.liveMessage.set(
       `Bestätigungslink für ${address} angefordert. Sieh in deinem Postfach nach.`,

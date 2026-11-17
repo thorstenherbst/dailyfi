@@ -58,6 +58,24 @@ export type Database = {
         }
         Relationships: []
       }
+      dpa_acceptances: {
+        Row: {
+          accepted_at: string
+          user_id: string
+          version: string
+        }
+        Insert: {
+          accepted_at?: string
+          user_id: string
+          version: string
+        }
+        Update: {
+          accepted_at?: string
+          user_id?: string
+          version?: string
+        }
+        Relationships: []
+      }
       invite_attempts: {
         Row: {
           failures: number
@@ -211,6 +229,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_dpa: { Args: { p_version: string }; Returns: undefined }
       before_user_created: { Args: { event: Json }; Returns: Json }
       has_beta_access: { Args: never; Returns: boolean }
       new_invite_code: { Args: never; Returns: string }

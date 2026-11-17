@@ -1,0 +1,193 @@
+<app-legal-layout heading="Vertrag zur Auftragsverarbeitung" [meta]="meta">
+  <p>nach Art. 28 Abs. 3 der Datenschutz-Grundverordnung (DSGVO)</p>
+
+  <h2>Vertragsparteien</h2>
+  <p>
+    <strong>Verantwortlicher</strong> ist die Person, die Dailyfi mit ihrem Konto nutzt (im
+    Folgenden „Kunde").
+  </p>
+  <p><strong>Auftragsverarbeiter</strong> ist (im Folgenden „Anbieter"):</p>
+  <address>
+    @if (provider.company) {
+      <app-provider-field [value]="provider.company" /><br />
+    }
+    <app-provider-field [value]="provider.name" /><br />
+    <app-provider-field [value]="provider.street" /><br />
+    <app-provider-field [value]="provider.city" /><br />
+    E-Mail: <app-provider-field [value]="provider.email" link="mail" />
+  </address>
+  <p>
+    Der Vertrag kommt zustande, wenn der Kunde ihm in Dailyfi zustimmt. Er gilt für die
+    personenbezogenen Daten Dritter, die der Kunde in Dailyfi einträgt. Die Daten des Kunden selbst,
+    etwa seine E-Mail-Adresse, verarbeitet der Anbieter als Verantwortlicher; dafür gilt die
+    <a routerLink="/datenschutz">Datenschutzerklärung</a>.
+  </p>
+
+  <h2>§ 1 Gegenstand und Dauer</h2>
+  <p>
+    Gegenstand ist die Bereitstellung von Dailyfi, einer Anwendung zur Zeiterfassung, und die damit
+    verbundene Speicherung der Daten des Kunden. Der Vertrag gilt für die Dauer der Nutzung. Er
+    endet, wenn der Kunde die Nutzung kündigt, insbesondere durch eine Anfrage zur Löschung seines
+    Kontos, oder wenn der Anbieter die Nutzung beendet. Was danach mit den Daten geschieht, regelt §
+    11.
+  </p>
+
+  <h2>§ 2 Art und Zweck der Verarbeitung</h2>
+  <p>
+    Der Anbieter speichert die Daten, die der Kunde eingibt, stellt sie ihm dar, wertet sie für ihn
+    aus (Summen je Kunde, Projekt und Monat), stellt sie zum Export bereit und löscht sie auf seine
+    Veranlassung. Zweck ist allein die Zeiterfassung und Auswertung für den Kunden.
+  </p>
+
+  <h2>§ 3 Art der Daten und Kategorien betroffener Personen</h2>
+  <p>Art der Daten:</p>
+  <ul>
+    <li>Namen von Kunden des Kunden, also Personen oder Unternehmen, für die er arbeitet</li>
+    <li>Projektnamen, Projektfarben und Stundensätze</li>
+    <li>Zeiteinträge mit Beginn, Ende und freier Beschreibung</li>
+  </ul>
+  <p>Kategorien betroffener Personen:</p>
+  <ul>
+    <li>Auftraggeber des Kunden, soweit natürliche Personen</li>
+    <li>Ansprechpersonen und Beschäftigte von Auftraggebern</li>
+    <li>weitere Personen, die der Kunde in Namen oder Beschreibungen nennt</li>
+  </ul>
+  <p>
+    Besondere Kategorien personenbezogener Daten nach Art. 9 DSGVO sind nicht vorgesehen. Der Kunde
+    trägt sie nicht ein.
+  </p>
+
+  <h2>§ 4 Weisungen</h2>
+  <ol>
+    <li>
+      Der Anbieter verarbeitet die Daten nur auf dokumentierte Weisung des Kunden, auch bei einer
+      Übermittlung in ein Drittland, es sei denn, er ist gesetzlich dazu verpflichtet. In diesem
+      Fall teilt er dem Kunden die rechtlichen Anforderungen vorher mit, sofern das Gesetz dies
+      nicht verbietet.
+    </li>
+    <li>
+      Weisungen sind dieser Vertrag und die Nutzung der Funktionen von Dailyfi durch den Kunden.
+      Weitere Weisungen erteilt der Kunde in Textform, zum Beispiel per E-Mail.
+    </li>
+    <li>
+      Hält der Anbieter eine Weisung für rechtswidrig, weist er den Kunden unverzüglich darauf hin.
+    </li>
+  </ol>
+
+  <h2>§ 5 Vertraulichkeit</h2>
+  <p>
+    Der Anbieter verpflichtet alle Personen, die Zugang zu den Daten haben, zur Vertraulichkeit,
+    soweit sie nicht ohnehin einer gesetzlichen Verschwiegenheitspflicht unterliegen. Heute hat nur
+    der Anbieter selbst Zugang.
+  </p>
+
+  <h2>§ 6 Sicherheit der Verarbeitung</h2>
+  <p>
+    Der Anbieter trifft die technischen und organisatorischen Maßnahmen nach Art. 32 DSGVO, die in
+    Anlage 1 beschrieben sind. Er darf sie weiterentwickeln, solange das Schutzniveau nicht sinkt.
+  </p>
+
+  <h2>§ 7 Unterauftragsverarbeiter</h2>
+  <ol>
+    <li>Der Kunde genehmigt die in Anlage 2 genannten Unterauftragsverarbeiter.</li>
+    <li>
+      Will der Anbieter einen Unterauftragsverarbeiter hinzunehmen oder ersetzen, kündigt er das
+      vorab per E-Mail an die Adresse des Kontos an. Der Kunde kann der Änderung innerhalb von vier
+      Wochen nach der Ankündigung widersprechen. Einigen sich die Parteien nicht, kann der Kunde
+      sein Konto löschen lassen; die Änderung gilt dann nicht für ihn.
+    </li>
+    <li>
+      Der Anbieter legt jedem Unterauftragsverarbeiter vertraglich dieselben Datenschutzpflichten
+      auf, die dieser Vertrag ihm auferlegt. Erfüllt ein Unterauftragsverarbeiter seine
+      Datenschutzpflichten nicht, haftet der Anbieter dem Kunden für dessen Pflichterfüllung.
+    </li>
+  </ol>
+
+  <h2>§ 8 Unterstützung bei Rechten betroffener Personen</h2>
+  <p>
+    Der Kunde kann alle Daten in Dailyfi selbst einsehen und berichtigen. Einzelne Zeiteinträge
+    löscht er selbst, Kunden und Projekte kann er archivieren. Zeiteinträge kann er je Monat in der
+    Auswertung als CSV-Datei exportieren. Die Löschung des Kontos mit allen Daten nimmt der Anbieter
+    auf Anfrage per E-Mail vor, unverzüglich, spätestens innerhalb eines Monats. Darüber hinaus
+    unterstützt der Anbieter ihn bei Anfragen betroffener Personen nach Kapitel III DSGVO. Wendet
+    sich eine betroffene Person an den Anbieter, leitet er die Anfrage an den Kunden weiter.
+  </p>
+
+  <h2>§ 9 Unterstützung nach Art. 32 bis 36 DSGVO</h2>
+  <p>
+    Der Anbieter unterstützt den Kunden mit den ihm verfügbaren Informationen bei der Sicherheit der
+    Verarbeitung, bei Meldungen und Benachrichtigungen nach Verletzungen des Schutzes
+    personenbezogener Daten, bei einer Datenschutz-Folgenabschätzung und bei einer vorherigen
+    Konsultation der Aufsichtsbehörde.
+  </p>
+
+  <h2>§ 10 Meldung von Verletzungen</h2>
+  <p>
+    Erfährt der Anbieter von einer Verletzung des Schutzes der Daten des Kunden, meldet er sie dem
+    Kunden unverzüglich per E-Mail. Die Meldung enthält, soweit bekannt, die Angaben nach Art. 33
+    Abs. 3 DSGVO: Art der Verletzung, betroffene Daten und Personen, wahrscheinliche Folgen und
+    ergriffene Maßnahmen.
+  </p>
+
+  <h2>§ 11 Löschung und Rückgabe nach Vertragsende</h2>
+  <p>
+    Nach dem Ende des Vertrags löscht der Anbieter nach Wahl des Kunden alle Daten des Kunden oder
+    gibt sie ihm zurück und löscht sie danach, sofern keine gesetzliche Pflicht zur Aufbewahrung
+    besteht. Die Rückgabe ist ein vollständiger Export aller Daten (Kunden, Projekte, Zeiteinträge)
+    als CSV-Datei, den der Anbieter auf Anfrage bereitstellt. Zusätzlich kann der Kunde seine
+    Zeiteinträge je Monat in der Auswertung selbst als CSV-Datei exportieren.
+  </p>
+
+  <h2>§ 12 Nachweise und Kontrollen</h2>
+  <p>
+    Der Anbieter stellt dem Kunden alle Informationen zur Verfügung, die zum Nachweis der Pflichten
+    aus diesem Vertrag nötig sind. Er ermöglicht Überprüfungen einschließlich Inspektionen durch den
+    Kunden oder einen von ihm beauftragten Prüfer nach rechtzeitiger Ankündigung und ohne unnötige
+    Störung des Betriebs. Für die Rechenzentren genügen in der Regel die Nachweise der
+    Unterauftragsverarbeiter.
+  </p>
+
+  <h2>§ 13 Schlussbestimmungen</h2>
+  <p>
+    Eine neue Fassung dieses Vertrags kündigt der Anbieter vorher an; sie gilt erst mit der
+    Zustimmung des Kunden. Bei Widersprüchen zu anderen Vereinbarungen geht dieser Vertrag in Fragen
+    des Datenschutzes vor. Es gilt deutsches Recht.
+  </p>
+
+  <h2>Anlage 1: Technische und organisatorische Maßnahmen</h2>
+  <ul>
+    <li>
+      Alle Verbindungen zur Anwendung und zur Datenbank laufen verschlüsselt über TLS (HTTPS).
+    </li>
+    <li>
+      Jeder Datensatz gehört zu einem Konto. Die Datenbank lässt Lesen und Schreiben nur für das
+      eigene Konto zu (Row Level Security je Nutzer). So sind die Daten der Kunden voneinander
+      getrennt.
+    </li>
+    <li>
+      Anmeldung ohne Passwort über einmalige Anmeldelinks per E-Mail. Die Sitzung endet mit dem
+      Abmelden.
+    </li>
+    <li>
+      Dailyfi ist eine geschlossene Beta: ein Konto entsteht nur mit gültigem Einladungscode,
+      Fehlversuche bei der Eingabe sind begrenzt.
+    </li>
+    <li>Zugang zur Verwaltung der Datenbank und des Hostings hat nur der Anbieter.</li>
+    <li>Die Datenträger beim Hoster sind verschlüsselt.</li>
+    <li>
+      Keine Analyse-, Werbe- oder Tracking-Dienste; keine Inhalte von Servern Dritter außer den in
+      Anlage 2 genannten.
+    </li>
+  </ul>
+
+  <h2>Anlage 2: Unterauftragsverarbeiter</h2>
+  <dl>
+    @for (entry of subprocessors; track entry.name) {
+      <dt>{{ entry.name }}, {{ entry.seat }}</dt>
+      <dd>
+        {{ entry.service }}. Ort: {{ entry.location }}. Grundlage für die Übermittlung:
+        {{ entry.transferBasis }}.
+      </dd>
+    }
+  </dl>
+</app-legal-layout>

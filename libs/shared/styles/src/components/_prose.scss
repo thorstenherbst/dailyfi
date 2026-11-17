@@ -1,0 +1,88 @@
+@use '../abstracts' as *;
+
+// Ruhiger Lesesatz fuer laengere Texte (Impressum, Datenschutz, AV-Vertrag):
+// eine Spalte mit rund 70 Zeichen, h1 + h2, Absaetze und Listen mit Luft.
+.prose {
+  max-width: size(prose-w);
+  font-size: font-size(md);
+  line-height: line-height(prose);
+
+  h1 {
+    margin-bottom: space(2);
+    font-size: font-size(2xl);
+  }
+
+  h2 {
+    margin-top: space(10);
+    margin-bottom: space(3);
+    font-size: font-size(lg);
+  }
+
+  h3 {
+    margin-top: space(6);
+    margin-bottom: space(2);
+    font-size: font-size(md);
+  }
+
+  p,
+  ul,
+  ol,
+  dl,
+  address {
+    margin-bottom: space(4);
+  }
+
+  ul,
+  ol {
+    padding-left: space(6);
+  }
+
+  li + li {
+    margin-top: space(1);
+  }
+
+  ul {
+    list-style: disc;
+  }
+
+  ol {
+    list-style: decimal;
+  }
+
+  address {
+    font-style: normal;
+  }
+
+  dt {
+    font-weight: font-weight(semibold);
+  }
+
+  dd {
+    margin-bottom: space(3);
+  }
+
+  a {
+    overflow-wrap: anywhere;
+  }
+}
+
+// Stand, Version: leise unter der Ueberschrift.
+.prose-meta {
+  color: var(--text-muted);
+  font-size: font-size(sm);
+}
+
+// Noch nicht ausgefuellte Angabe wie [[PLZ Ort]]. Erkennbar an Rahmen,
+// Schrift und Klammern, nicht nur an der Farbe.
+.placeholder {
+  @include mono;
+  padding: 0 space(1);
+  border: 1px dashed var(--warning);
+  border-radius: radius(sm);
+  background: color-mix(in srgb, var(--warning) 14%, transparent);
+  color: var(--text);
+  font-size: font-size(sm);
+  font-weight: font-weight(semibold);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}

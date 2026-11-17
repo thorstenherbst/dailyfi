@@ -1,9 +1,12 @@
 @use 'abstracts' as *;
 
-// Schmale zentrierte Karte (400 px) mit Wortmarke, Titel und Formular.
+// Schmale zentrierte Karte (400 px) mit Wortmarke, Titel und Formular,
+// darunter die Links zu den Rechtstexten.
 :host {
   display: grid;
   place-items: center;
+  align-content: center;
+  gap: space(4);
   min-height: 100dvh;
   padding: space(6) space(4);
 }
@@ -27,4 +30,9 @@ h1 {
 .lead {
   margin-top: calc(#{space(5)} * -1 + #{space(2)});
   color: var(--text-muted);
+}
+
+.legal {
+  color: var(--text-muted);
+  font-size: font-size(sm);
 }

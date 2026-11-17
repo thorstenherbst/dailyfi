@@ -1,17 +1,18 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-import { Wordmark } from '@lib/shared/ui';
+import { LegalLinks, Wordmark } from '@lib/shared/ui';
 
 /**
  * Die schmale zentrierte Karte. Traegt die `h1` der Seite,
  * damit jede Auth-Seite genau eine Ueberschrift hat und nicht jede Seite ihre
  * eigene Variante der Karte baut. Die Wortmarke steht oben in der Karte — auf
- * diesen Seiten gibt es weder Menue noch Statusleiste.
+ * diesen Seiten gibt es weder Menue noch Statusleiste. Darum stehen auch die
+ * Links zu den Rechtstexten hier, unter der Karte.
  */
 @Component({
   selector: 'app-auth-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Wordmark],
+  imports: [LegalLinks, Wordmark],
   styleUrl: './auth-card.scss',
   template: `
     <section aria-labelledby="auth-heading">
@@ -22,6 +23,7 @@ import { Wordmark } from '@lib/shared/ui';
       }
       <ng-content />
     </section>
+    <app-legal-links class="legal" />
   `,
 })
 export class AuthCard {

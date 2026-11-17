@@ -1,11 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 
-import { readInviteCode, rememberInviteCode } from '@lib/auth/domain';
+import {
+  readDpaConsent,
+  readInviteCode,
+  rememberDpaConsent,
+  rememberInviteCode,
+} from '@lib/auth/domain';
 import { SUPABASE } from '@lib/shared/data-access-supabase';
 import { FakeSupabase } from '@lib/shared/data-access-supabase/testing';
 
 import { CallbackPage } from './callback-page';
+
+/** Wer nach dem Tausch angemeldet ist (`FakeSupabase.exchangeUser`). */
+const EMAIL = 'neu@dailyfi.test';
 
 interface Harness {
   fixture: ComponentFixture<CallbackPage>;
@@ -78,18 +86,65 @@ describe('CallbackPage', () => {
   });
 
   it('loest den auf /register gemerkten Code ein', async () => {
-    rememberInviteCode('DAILYFI-DEV-2');
+    rememberInviteCode('DAILYFI-DEV-2', EMAIL);
 
     const harness = await setup({ query: { code: 'pkce-123' } });
 
     expect(harness.fake.redeemedCodes).toEqual(['DAILYFI-DEV-2']);
     expect(harness.navigate).toHaveBeenCalledWith(['/week'], { replaceUrl: true });
     // Eingeloest heisst aufgebraucht: der Code liegt danach nicht mehr herum.
-    expect(readInviteCode()).toBeNull();
+    expect(readInviteCode(EMAIL)).toBeNull();
+  });
+
+  it('speichert die auf /register erteilte Zustimmung zum AV-Vertrag', async () => {
+    rememberInviteCode('DAILYFI-DEV-2', EMAIL);
+    rememberDpaConsent('1.0', EMAIL);
+
+    const harness = await setup({ query: { code: 'pkce-123' } });
+
+    expect(harness.fake.acceptDpaCalls).toEqual(['1.0']);
+    expect(readDpaConsent(EMAIL)).toBeNull();
+    expect(harness.navigate).toHaveBeenCalledWith(['/week'], { replaceUrl: true });
+  });
+
+  it('uebernimmt keine Zustimmung und keinen Code einer anderen Adresse', async () => {
+    // Geteilter Rechner: A hat sich registriert, B meldet sich danach an.
+    rememberInviteCode('DAILYFI-DEV-2', 'a@dailyfi.test');
+    rememberDpaConsent('1.0', 'a@dailyfi.test');
+
+    const harness = await setup({
+      query: { code: 'pkce-123' },
+      configure: (fake) => {
+        fake.betaAccess = true;
+      },
+    });
+
+    expect(harness.fake.redeemedCodes).toEqual([]);
+    expect(harness.fake.acceptDpaCalls).toEqual([]);
+    // Verworfen, nicht nur uebergangen.
+    expect(localStorage.getItem('dailyfi.pending-invite-code')).toBeNull();
+    expect(localStorage.getItem('dailyfi.pending-dpa-consent')).toBeNull();
+    expect(harness.navigate).toHaveBeenCalledWith(['/week'], { replaceUrl: true });
+  });
+
+  it('speichert keine Zustimmung, solange der Code nicht eingeloest ist', async () => {
+    rememberInviteCode('FALSCH-123', EMAIL);
+    rememberDpaConsent('1.0', EMAIL);
+
+    const harness = await setup({
+      query: { code: 'pkce-123' },
+      configure: (fake) => {
+        fake.redeemResult = 'invalid';
+      },
+    });
+
+    expect(harness.fake.acceptDpaCalls).toEqual([]);
+    // Liegt weiter bereit fuer den naechsten Versuch mit gueltigem Code.
+    expect(readDpaConsent(EMAIL)).toBe('1.0');
   });
 
   it('schickt bei ungueltigem Code zur Eingabe zurueck und sagt warum', async () => {
-    rememberInviteCode('FALSCH-123');
+    rememberInviteCode('FALSCH-123', EMAIL);
 
     const harness = await setup({
       query: { code: 'pkce-123' },
@@ -102,7 +157,7 @@ describe('CallbackPage', () => {
       replaceUrl: true,
       queryParams: { reason: 'invalid-code' },
     });
-    expect(readInviteCode()).toBeNull();
+    expect(readInviteCode(EMAIL)).toBeNull();
   });
 
   it('nennt einen abgelaufenen Link beim Namen', async () => {
@@ -131,7 +186,7 @@ describe('CallbackPage', () => {
   });
 
   it('haelt eine Serverstoerung beim Einloesen vom Code fern', async () => {
-    rememberInviteCode('DAILYFI-DEV-2');
+    rememberInviteCode('DAILYFI-DEV-2', EMAIL);
 
     const harness = await setup({
       query: { code: 'pkce-123' },
@@ -145,11 +200,11 @@ describe('CallbackPage', () => {
       queryParams: { reason: 'server-error' },
     });
     // Der Code war vielleicht gueltig — er darf die Stoerung ueberleben.
-    expect(readInviteCode()).toBe('DAILYFI-DEV-2');
+    expect(readInviteCode(EMAIL)).toBe('DAILYFI-DEV-2');
   });
 
   it('schickt bei gesperrtem Konto zur Eingabe und behaelt den Code', async () => {
-    rememberInviteCode('DF-ABCDE-FGHIJ-KLMNO-PQRST');
+    rememberInviteCode('DF-ABCDE-FGHIJ-KLMNO-PQRST', EMAIL);
 
     const harness = await setup({
       query: { code: 'pkce-123' },
@@ -162,7 +217,7 @@ describe('CallbackPage', () => {
       replaceUrl: true,
       queryParams: { reason: 'locked' },
     });
-    expect(readInviteCode()).toBe('DF-ABCDE-FGHIJ-KLMNO-PQRST');
+    expect(readInviteCode(EMAIL)).toBe('DF-ABCDE-FGHIJ-KLMNO-PQRST');
   });
 
   it('erklaert den in einem anderen Browser geoeffneten Link', async () => {

@@ -50,8 +50,15 @@ export default [
               onlyDependOnLibsWithTags: ['domain:reports', 'domain:shared'],
             },
             {
+              // Die Zustimmung zum AV-Vertrag gehoert zum Kontozugang (wie der
+              // Einladungscode); Version und Datum kommen aus `legal/domain`.
+              // Umgekehrt kennt `legal` die Anmeldung nicht.
               sourceTag: 'domain:auth',
-              onlyDependOnLibsWithTags: ['domain:auth', 'domain:shared'],
+              onlyDependOnLibsWithTags: ['domain:auth', 'domain:legal', 'domain:shared'],
+            },
+            {
+              sourceTag: 'domain:legal',
+              onlyDependOnLibsWithTags: ['domain:legal', 'domain:shared'],
             },
             { sourceTag: 'domain:shared', onlyDependOnLibsWithTags: ['domain:shared'] },
           ],

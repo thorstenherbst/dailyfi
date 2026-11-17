@@ -43,6 +43,8 @@ $line-height: (
   text: 1.5,
   heading: 1.2,
   block: 1.25,
+  // Laengere Lesetexte (Rechtstexte, components/_prose).
+  prose: 1.65,
 );
 
 $font-family: (
@@ -113,6 +115,8 @@ $size: (
   fab-bridge-overhang: 12px,
   auth-card-w: 400px,
   container-w: 1280px,
+  // Lesespalte: rund 70 Zeichen je Zeile.
+  prose-w: 70ch,
 );
 
 // Layoutmasse, die das Raster und der App-Rahmen auch zur Laufzeit brauchen.

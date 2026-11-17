@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { Shortcut, SyncState } from './shell-status';
 import { StatusBar } from './status-bar';
@@ -29,7 +30,10 @@ class Host {
 }
 
 async function setup(): Promise<{ host: Host; element: HTMLElement; render: () => void }> {
-  await TestBed.configureTestingModule({ imports: [Host] }).compileComponents();
+  await TestBed.configureTestingModule({
+    imports: [Host],
+    providers: [provideRouter([])],
+  }).compileComponents();
   const fixture = TestBed.createComponent(Host);
   fixture.detectChanges();
   const element: HTMLElement = fixture.nativeElement.querySelector('app-status-bar');
@@ -92,5 +96,19 @@ describe('StatusBar', () => {
     element.querySelector<HTMLButtonElement>('button')!.click();
 
     expect(host.signedOut).toBe(1);
+  });
+
+  it('verlinkt mit einem Link „Rechtliches" auf das Impressum', async () => {
+    const { element } = await setup();
+
+    const links = [...element.querySelectorAll<HTMLAnchorElement>('a')];
+    expect(links).toHaveLength(1);
+    expect(links[0].getAttribute('href')).toBe('/impressum');
+    expect(links[0].textContent?.trim()).toBe('Rechtliches');
+    // Vor Konto und „Abmelden": das Konto steht weiter ganz rechts.
+    expect(links[0].compareDocumentPosition(element.querySelector('.email')!)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(text(element)).toContain('Abmelden');
   });
 });

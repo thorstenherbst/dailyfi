@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { Icon, IconName } from './icon';
 import { Shortcut, SyncState } from './shell-status';
@@ -14,13 +15,17 @@ const SYNC: Record<SyncState, { icon: IconName; label: string }> = {
  * Statusleiste unten (32 px, immer sichtbar). Rein praesentational: die
  * App-Shell reicht die Werte durch und hoert auf `signOut`.
  *
+ * Rechts stehen „Rechtliches" (fuehrt zum Impressum, dort die uebrigen
+ * Rechtstexte), das Konto und „Abmelden". Ein Link statt drei: bei 1024 px
+ * reicht der Platz sonst nicht fuer E-Mail und „Abmelden".
+ *
  * Was `null` ist, wird nicht gezeigt — die Leiste behauptet nichts, was die
  * aktuelle Seite nicht weiss. Der Sync-Zustand steht als Symbol **und** Wort.
  */
 @Component({
   selector: 'app-status-bar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon],
+  imports: [Icon, RouterLink],
   host: { role: 'contentinfo', 'aria-label': 'Statusleiste' },
   styleUrl: './status-bar.scss',
   template: `
@@ -52,12 +57,13 @@ const SYNC: Record<SyncState, { icon: IconName; label: string }> = {
         }
       </span>
     }
-    <span class="right">
+    <div class="right">
+      <a class="legal" routerLink="/impressum">Rechtliches</a>
       @if (email(); as address) {
         <span class="email">{{ address }}</span>
       }
       <button class="btn-link" type="button" (click)="signOut.emit()">Abmelden</button>
-    </span>
+    </div>
   `,
 })
 export class StatusBar {

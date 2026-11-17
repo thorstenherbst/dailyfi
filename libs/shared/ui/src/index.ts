@@ -1,4 +1,5 @@
 export * from './lib/icon';
+export * from './lib/legal-links';
 export * from './lib/load-error';
 export * from './lib/nav-menu';
 export * from './lib/session-expired-dialog';

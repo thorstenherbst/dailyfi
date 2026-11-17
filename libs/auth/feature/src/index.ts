@@ -6,3 +6,4 @@
 export const loadLoginPage = () => import('./lib/login-page').then((m) => m.LoginPage);
 export const loadRegisterPage = () => import('./lib/register-page').then((m) => m.RegisterPage);
 export const loadCallbackPage = () => import('./lib/callback-page').then((m) => m.CallbackPage);
+export const loadConsentPage = () => import('./lib/consent-page').then((m) => m.ConsentPage);

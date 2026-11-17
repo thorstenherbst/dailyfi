@@ -56,14 +56,3 @@ Thumbs.db
 .nx/cache
 .nx/workspace-data
 .nx/migrate-runs
-
-# Design-Arbeitsstand, nur lokal
-/design/
-
-# Planungs- und Arbeitsunterlagen, nur lokal
-/mvp-spec.md
-/refactor-spec.md
-/refactor-plan.md
-/implementation-plan.md
-/handover.md
-/v2-backlog.md

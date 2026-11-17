@@ -32,6 +32,7 @@ src/
                _typography body, Überschriften, .mono, sichtbarer Fokus
   components/  _button _field _modal _table _pagehead _notice _toast _panel
                _time-block _load-error _tag _project-color _tooltip
+               _prose (Lesesatz der Rechtstexte, .placeholder)
   utilities/   _a11y (.sr-only, .skip-link)  _layout (.container, .stack, .grow)
   index.scss   einziger globaler Einstieg
 ```

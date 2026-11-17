@@ -1,3 +1,5 @@
+import { forgetPending, readPending, rememberPending } from './pending-value';
+
 /**
  * Der Einladungscode von `/register` bis zum Ruecksprung aus der Mail.
  *
@@ -21,65 +23,21 @@
  */
 const KEY = 'dailyfi.pending-invite-code';
 
-/** So lange wie der Magic Link gilt. */
-const MAX_AGE_MS = 60 * 60 * 1000;
-
-interface Stored {
-  readonly code: string;
-  readonly savedAt: number;
-}
-
-/** `localStorage` kann werfen (private Sitzung, blockierte Speicherung). */
-function storage(): Storage | null {
-  try {
-    return globalThis.localStorage ?? null;
-  } catch {
-    return null;
-  }
-}
-
-export function rememberInviteCode(code: string): void {
-  const entry: Stored = { code: code.trim(), savedAt: Date.now() };
-  try {
-    storage()?.setItem(KEY, JSON.stringify(entry));
-  } catch {
-    // Ohne Zwischenspeicher fragt /register den Code spaeter erneut ab.
-  }
+/** Merkt den Code fuer die Adresse, an die der Bestaetigungslink geht. */
+export function rememberInviteCode(code: string, email: string): void {
+  rememberPending(KEY, code.trim(), email);
 }
 
 /**
- * Liest den Code, **ohne** ihn zu loeschen. Geloescht wird erst, wenn klar ist,
- * dass ein weiterer Versuch nichts mehr bringt (`forgetInviteCode`) — sonst
- * kostet eine Serverstoerung beim Einloesen den Code.
+ * Liest den Code fuer das angemeldete Konto, **ohne** ihn zu loeschen.
+ * Geloescht wird erst, wenn klar ist, dass ein weiterer Versuch nichts mehr
+ * bringt (`forgetInviteCode`) — sonst kostet eine Serverstoerung beim
+ * Einloesen den Code. Gehoert er zu einer anderen Adresse, ist er weg.
  */
-export function readInviteCode(): string | null {
-  try {
-    const raw = storage()?.getItem(KEY);
-    if (!raw) {
-      return null;
-    }
-
-    const entry = JSON.parse(raw) as Partial<Stored>;
-    if (typeof entry.code !== 'string' || entry.code.length === 0) {
-      forgetInviteCode();
-      return null;
-    }
-    if (typeof entry.savedAt !== 'number' || Date.now() - entry.savedAt > MAX_AGE_MS) {
-      forgetInviteCode();
-      return null;
-    }
-    return entry.code;
-  } catch {
-    // Kaputter Inhalt ist kein Grund, die Registrierung abzubrechen.
-    forgetInviteCode();
-    return null;
-  }
+export function readInviteCode(email: string): string | null {
+  return readPending(KEY, email);
 }
 
 export function forgetInviteCode(): void {
-  try {
-    storage()?.removeItem(KEY);
-  } catch {
-    // nichts zu tun
-  }
+  forgetPending(KEY);
 }

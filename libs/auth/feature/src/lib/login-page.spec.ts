@@ -1,6 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
+import {
+  readDpaConsent,
+  readInviteCode,
+  rememberDpaConsent,
+  rememberInviteCode,
+} from '@lib/auth/domain';
 import { SUPABASE } from '@lib/shared/data-access-supabase';
 import { FakeSupabase } from '@lib/shared/data-access-supabase/testing';
 
@@ -67,6 +73,19 @@ describe('LoginPage', () => {
 
     expect(harness.element.querySelector('.sent')?.textContent).toContain('thorsten@dailyfi.test');
     expect(harness.element.querySelector('form')).toBeNull();
+  });
+
+  it('verwirft beim Anfordern Einladungscode und Zustimmung einer frueheren Registrierung', async () => {
+    rememberInviteCode('DAILYFI-DEV-2', 'thorsten@dailyfi.test');
+    rememberDpaConsent('1.0', 'thorsten@dailyfi.test');
+    const harness = await setup();
+
+    harness.type('thorsten@dailyfi.test');
+    await harness.submit();
+
+    // Auch bei derselben Adresse: wer sich anmeldet, registriert sich nicht.
+    expect(readInviteCode('thorsten@dailyfi.test')).toBeNull();
+    expect(readDpaConsent('thorsten@dailyfi.test')).toBeNull();
   });
 
   it('antwortet bei unbekannter Adresse genauso wie bei bekannter', async () => {
@@ -173,5 +192,16 @@ describe('LoginPage', () => {
 
     const link = harness.element.querySelector<HTMLAnchorElement>('a[href="/register"]');
     expect(link?.textContent).toContain('Einladungscode');
+  });
+
+  it('verlinkt unter der Karte Impressum, Datenschutz und AV-Vertrag', async () => {
+    const harness = await setup();
+
+    const nav = harness.element.querySelector('nav[aria-label="Rechtliches"]')!;
+    expect(
+      [...nav.querySelectorAll<HTMLAnchorElement>('a')].map((link) => link.getAttribute('href')),
+    ).toEqual(['/impressum', '/datenschutz', '/avv']);
+    // Ausserhalb der Karte, damit sie nicht zum Formular gehoeren.
+    expect(nav.closest('section')).toBeNull();
   });
 });
