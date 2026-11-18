@@ -56,6 +56,17 @@
   }
 }
 
+// „Sign in with Apple“: einfarbig nach Apples Vorgaben, ohne eigenen
+// Hover-Farbton.
+.btn-apple {
+  background: var(--apple-bg);
+  --btn-fg: var(--apple-fg);
+
+  &:hover:not(:disabled, [aria-disabled='true']) {
+    opacity: 0.85;
+  }
+}
+
 // Gefuellt: nur in der Loesch-Rueckfrage.
 .btn-danger {
   background: var(--danger);

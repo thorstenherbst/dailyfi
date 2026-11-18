@@ -29,12 +29,12 @@ export const routes: Routes = [
   },
   {
     path: 'register',
-    title: 'Registrieren — Dailyfi',
+    title: 'Einladungscode — Dailyfi',
     canActivate: [inviteCodeOnly],
     loadComponent: loadRegisterPage,
   },
-  // MUSS vor der Wildcard stehen: sonst faengt diese den Ruecksprung aus der
-  // Mail ab, leitet auf /week um und der Code in der Adresse ist verbraucht.
+  // MUSS vor der Wildcard stehen: sonst faengt diese den Ruecksprung von Apple
+  // ab, leitet auf /week um und der Code in der Adresse ist verbraucht.
   {
     path: 'auth/callback',
     title: 'Anmeldung — Dailyfi',

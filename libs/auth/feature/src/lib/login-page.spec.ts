@@ -1,12 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
-import {
-  readDpaConsent,
-  readInviteCode,
-  rememberDpaConsent,
-  rememberInviteCode,
-} from '@lib/auth/domain';
 import { SUPABASE } from '@lib/shared/data-access-supabase';
 import { FakeSupabase } from '@lib/shared/data-access-supabase/testing';
 
@@ -16,8 +10,8 @@ interface Harness {
   fixture: ComponentFixture<LoginPage>;
   element: HTMLElement;
   fake: FakeSupabase;
-  type(value: string): void;
-  submit(): Promise<void>;
+  button(): HTMLButtonElement;
+  click(): Promise<void>;
 }
 
 async function setup(configure: (fake: FakeSupabase) => void = () => {}): Promise<Harness> {
@@ -32,19 +26,15 @@ async function setup(configure: (fake: FakeSupabase) => void = () => {}): Promis
   const fixture = TestBed.createComponent(LoginPage);
   fixture.detectChanges();
   const element: HTMLElement = fixture.nativeElement;
+  const button = (): HTMLButtonElement => element.querySelector('.btn-apple')!;
 
   return {
     fixture,
     element,
     fake,
-    type(value: string): void {
-      const input = element.querySelector<HTMLInputElement>('#login-email')!;
-      input.value = value;
-      input.dispatchEvent(new Event('input'));
-      fixture.detectChanges();
-    },
-    async submit(): Promise<void> {
-      element.querySelector('form')!.dispatchEvent(new Event('submit'));
+    button,
+    async click(): Promise<void> {
+      button().click();
       await fixture.whenStable();
       fixture.detectChanges();
     },
@@ -60,138 +50,86 @@ describe('LoginPage', () => {
     vi.restoreAllMocks();
   });
 
-  it('fordert einen Anmeldelink an und bestaetigt als Text', async () => {
+  it('bietet nur die Anmeldung mit Apple an', async () => {
     const harness = await setup();
 
-    harness.type('thorsten@dailyfi.test');
-    await harness.submit();
-
-    expect(harness.fake.otpRequests).toHaveLength(1);
-    expect(harness.fake.otpRequests[0].email).toBe('thorsten@dailyfi.test');
-    // Kein Konto anlegen: /login ist kein zweiter Registrierungsweg.
-    expect(harness.fake.otpRequests[0].shouldCreateUser).toBe(false);
-
-    expect(harness.element.querySelector('.sent')?.textContent).toContain('thorsten@dailyfi.test');
-    expect(harness.element.querySelector('form')).toBeNull();
+    expect(harness.element.querySelector('input')).toBeNull();
+    expect(harness.button().textContent).toContain('Mit Apple anmelden');
+    // Das Logo ist Schmuck; der Name steht als Text am Knopf.
+    expect(harness.button().querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
   });
 
-  it('verwirft beim Anfordern Einladungscode und Zustimmung einer frueheren Registrierung', async () => {
-    rememberInviteCode('DAILYFI-DEV-2', 'thorsten@dailyfi.test');
-    rememberDpaConsent('1.0', 'thorsten@dailyfi.test');
+  it('startet die Anmeldung mit Apple und sperrt den Knopf bis zur Weiterleitung', async () => {
     const harness = await setup();
 
-    harness.type('thorsten@dailyfi.test');
-    await harness.submit();
+    await harness.click();
 
-    // Auch bei derselben Adresse: wer sich anmeldet, registriert sich nicht.
-    expect(readInviteCode('thorsten@dailyfi.test')).toBeNull();
-    expect(readDpaConsent('thorsten@dailyfi.test')).toBeNull();
+    expect(harness.fake.oauthRequests).toHaveLength(1);
+    expect(harness.fake.oauthRequests[0].provider).toBe('apple');
+    expect(harness.button().getAttribute('aria-disabled')).toBe('true');
+    expect(harness.element.querySelector('[role="status"]')?.textContent).toContain('Apple');
   });
 
-  it('antwortet bei unbekannter Adresse genauso wie bei bekannter', async () => {
-    const known = await setup();
-    known.type('thorsten@dailyfi.test');
-    await known.submit();
-    const knownText = known.element.querySelector('.sent')!.textContent!;
-
-    TestBed.resetTestingModule();
-
-    const unknown = await setup((fake) => {
-      fake.otpError = { message: 'Signups not allowed for otp', status: 422 };
-    });
-    unknown.type('fremd@example.com');
-    await unknown.submit();
-    const unknownText = unknown.element.querySelector('.sent')!.textContent!;
-
-    expect(unknownText.replace('fremd@example.com', 'X')).toBe(
-      knownText.replace('thorsten@dailyfi.test', 'X'),
-    );
-    expect(unknown.element.querySelector('[role="alert"]')).toBeNull();
-  });
-
-  it('weist eine unvollstaendige Adresse ab, ohne den Server zu fragen', async () => {
-    const harness = await setup();
-
-    harness.type('thorsten@');
-    await harness.submit();
-
-    expect(harness.fake.otpRequests).toHaveLength(0);
-    expect(harness.element.querySelector('[role="alert"]')?.textContent).toContain('gültige');
-  });
-
-  it('verraet auch ueber die Mengenbegrenzung kein bestehendes Konto', async () => {
-    // Die Drosselung greift nur, wenn tatsaechlich eine Mail rausging — also
-    // nur bei vorhandenem Konto. Wuerde die Seite sie zeigen, waere zweimaliges
-    // Absenden derselben Adresse die Antwort auf „gibt es dieses Konto?".
+  it('behaelt beim Start den Fokus auf dem Knopf', async () => {
     const harness = await setup((fake) => {
-      fake.otpError = {
-        message: 'For security purposes, you can only request this after 60 seconds.',
-        status: 429,
-      };
+      fake.oauthError = { message: 'provider is not enabled', status: 400 };
     });
+    document.body.appendChild(harness.element);
+    harness.button().focus();
 
-    harness.type('thorsten@dailyfi.test');
-    await harness.submit();
+    await harness.click();
 
-    expect(harness.element.querySelector('[role="alert"]')).toBeNull();
-    expect(harness.element.querySelector('[role="status"]')?.textContent).toContain(
-      'thorsten@dailyfi.test',
-    );
+    expect(document.activeElement).toBe(harness.button());
+    harness.element.remove();
   });
 
-  it('haelt die Live-Region schon vor dem Absenden bereit', async () => {
+  it('gibt den Knopf frei, wenn der Browser die Seite aus dem Cache zurueckholt', async () => {
     const harness = await setup();
+    await harness.click();
 
-    // Eine Region, die erst zusammen mit ihrem Text entsteht, sagen
-    // Screenreader nicht an.
-    expect(harness.element.querySelector('[role="status"]')).not.toBeNull();
-
-    harness.type('thorsten@dailyfi.test');
-    await harness.submit();
-
-    expect(harness.element.querySelector('[role="status"]')?.textContent).toContain(
-      'thorsten@dailyfi.test',
-    );
-  });
-
-  it('setzt den Fokus auf die Bestaetigung, statt ihn fallen zu lassen', async () => {
-    const harness = await setup();
-
-    harness.type('thorsten@dailyfi.test');
-    await harness.submit();
-
-    expect(document.activeElement).toBe(harness.element.querySelector('.sent-title'));
-  });
-
-  it('verdrahtet die Fehlermeldung mit dem Feld', async () => {
-    const harness = await setup();
-
-    harness.type('thorsten@');
-    await harness.submit();
-
-    const input = harness.element.querySelector<HTMLInputElement>('#login-email')!;
-    expect(input.getAttribute('aria-invalid')).toBe('true');
-    expect(input.getAttribute('aria-describedby')).toBe('login-email-error');
-    expect(harness.element.querySelector('#login-email-error')).not.toBeNull();
-  });
-
-  it('laesst nach dem Absenden eine andere Adresse zu', async () => {
-    const harness = await setup();
-
-    harness.type('thorsten@dailyfi.test');
-    await harness.submit();
-
-    harness.element.querySelector<HTMLButtonElement>('.btn-secondary')!.click();
+    globalThis.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }));
     harness.fixture.detectChanges();
 
-    expect(harness.element.querySelector('#login-email')).not.toBeNull();
+    expect(harness.button().hasAttribute('aria-disabled')).toBe(false);
+    expect(harness.element.querySelector('[role="status"]')?.textContent?.trim()).toBe('');
   });
 
-  it('verweist auf die Registrierung mit Einladungscode', async () => {
+  it('startet bei einem Doppelklick nur einmal', async () => {
     const harness = await setup();
 
-    const link = harness.element.querySelector<HTMLAnchorElement>('a[href="/register"]');
-    expect(link?.textContent).toContain('Einladungscode');
+    harness.button().click();
+    harness.button().click();
+    await harness.fixture.whenStable();
+
+    expect(harness.fake.oauthRequests).toHaveLength(1);
+  });
+
+  it('meldet einen gescheiterten Start und laesst es erneut versuchen', async () => {
+    const harness = await setup((fake) => {
+      fake.oauthError = { message: 'provider is not enabled', status: 400 };
+    });
+
+    await harness.click();
+
+    expect(harness.element.querySelector('[role="alert"]')?.textContent).toContain(
+      'nicht erreichbar',
+    );
+    expect(harness.button().hasAttribute('aria-disabled')).toBe(false);
+  });
+
+  it('haelt die Live-Region schon vor dem Klick bereit', async () => {
+    const harness = await setup();
+
+    const region = harness.element.querySelector('[role="status"]');
+    expect(region).not.toBeNull();
+    expect(region?.textContent?.trim()).toBe('');
+  });
+
+  it('erklaert neuen Nutzern den Einladungscode und bestehenden die geteilte Adresse', async () => {
+    const harness = await setup();
+
+    expect(harness.element.textContent).toContain('Einladungscode');
+    expect(harness.element.textContent).toContain('E-Mail-Adresse teilen');
   });
 
   it('verlinkt unter der Karte Impressum, Datenschutz und AV-Vertrag', async () => {
@@ -201,7 +139,5 @@ describe('LoginPage', () => {
     expect(
       [...nav.querySelectorAll<HTMLAnchorElement>('a')].map((link) => link.getAttribute('href')),
     ).toEqual(['/impressum', '/datenschutz', '/avv']);
-    // Ausserhalb der Karte, damit sie nicht zum Formular gehoeren.
-    expect(nav.closest('section')).toBeNull();
   });
 });

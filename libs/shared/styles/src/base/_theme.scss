@@ -43,6 +43,9 @@
   --toast-success: #6ee7a8;
   --toast-warning: #ffc857;
   --toast-danger: #ff9494;
+  // „Sign in with Apple“: Farben nach Apples Vorgaben, nicht aus der Palette.
+  --apple-bg: #000000;
+  --apple-fg: #ffffff;
   --toast-info: #a9b8ff;
   // Hover des Schliessen-Knopfs: neutrales Grau, wirkt auf beiden Toast-Flaechen.
   --toast-close-hover: rgb(127 127 127 / 0.22);
@@ -107,6 +110,8 @@
   --toast-warning: #8f5200;
   --toast-danger: #c4262e;
   --toast-info: #3557d4;
+  --apple-bg: #ffffff;
+  --apple-fg: #000000;
 
   --pc1-fill: #86a8ff;
   --pc1-on: #170f24;

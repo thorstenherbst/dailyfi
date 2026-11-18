@@ -15,10 +15,9 @@ on conflict (code) do nothing;
 -- ---------------------------------------------------------------------------
 -- Demo-Konto fuer die lokale Entwicklung: dev@dailyfi.local
 --
--- Ohne Passwort. Angemeldet wird sich ueber den normalen Magic Link — der Brief landet in
--- Mailpit (http://127.0.0.1:54324). Das Konto existiert nur, damit nach einem
--- `db:reset` sofort Kunden und Projekte da sind; anlegen laesst sich beides
--- auch in der App.
+-- Ohne Passwort und ohne Anmeldeweg: Apple leitet nicht auf das lokale
+-- Supabase zurueck. Das Konto existiert nur, damit nach einem `db:reset` Kunden
+-- und Projekte fuer SQL-Abfragen und Studio da sind.
 --
 -- Es gibt hier bewusst keine Zugangsdaten mehr. `seed.sql` laeuft nie gegen
 -- die Cloud, aber ein Passwort in einer eingecheckten Datei wandert erfahrungs-

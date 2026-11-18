@@ -1,7 +1,7 @@
 # Dailyfi
 
 Zeiterfassung für Freelancer: Zeitblöcke im Wochenraster, Projekte pro Kunde, Monatsauswertung
-mit CSV-Export. Zugang nur mit Einladungscode.
+mit CSV-Export. Anmeldung mit Apple, Zugang nur mit Einladungscode.
 
 Angular 22 (zoneless, Standalone, Signals) · Nx 24 · SCSS · Vitest · Supabase (Postgres, Auth, RLS)
 
@@ -14,15 +14,18 @@ Angular 22 (zoneless, Standalone, Signals) · Nx 24 · SCSS · Vitest · Supabas
 ## Lokaler Start
 
 ```bash
-supabase start   # Postgres, Auth, Studio und Mailpit lokal, spielt Migrationen und Seed ein
+supabase start   # Postgres, Auth und Studio lokal, spielt Migrationen und Seed ein
 npm ci
 npm start        # http://localhost:4200
 ```
 
 Lokal liest die App `apps/dailyfi/src/environments/environment.development.ts` (lokales Supabase
-auf Port 54321). Supabase Studio läuft auf http://127.0.0.1:54323. Magic Links landen in Mailpit
-unter http://127.0.0.1:54324. `npm run db:reset` setzt die Datenbank neu auf (Migrationen und
-`supabase/seed.sql`).
+auf Port 54321). Supabase Studio läuft auf http://127.0.0.1:54323. `npm run db:reset` setzt die
+Datenbank neu auf (Migrationen und `supabase/seed.sql`).
+
+Anmelden lässt sich lokal nicht: Apple leitet nur auf eine HTTPS-Adresse einer registrierten
+Domain zurück. Der Anmeldeweg ist über Vitest abgedeckt und wird auf einem Vercel-Deployment
+gegen Supabase Cloud ausprobiert.
 
 ## Testen
 
@@ -49,7 +52,7 @@ Fachlichkeit liegt in Libs unter `libs/<domäne>/<schicht>`, importiert über `@
 | `week` | `feature`, `ui`, `domain`, `data-access` |
 | `projects` | `feature`, `ui`, `domain`, `data-access` |
 | `reports` | `feature`, `domain`, `data-access` |
-| `auth` | `feature`, `ui`, `domain`, `data-access` |
+| `auth` | `feature`, `ui`, `data-access` |
 | `legal` | `feature`, `domain` |
 | `shared` | `ui`, `domain`, `data-access-supabase`, `util-time`, `util-browser`, `util-edit`, `styles` |
 
@@ -104,13 +107,20 @@ Rewrite auf `index.html`.
 - Das Schema kommt aus `supabase/migrations`. Der Seed (`supabase/seed.sql`) ist nur für lokal.
 - Die Auth-Einstellungen der Cloud werden von Hand gepflegt, `supabase/config.toml` gilt nur lokal:
   - Site-URL und Redirect-URL (`/auth/callback`) auf die Vercel-Domain
+  - Provider „Apple“: Services ID als Client ID, dazu der Secret Key — ein JWT, das mit dem
+    `.p8`-Schlüssel aus dem Apple Developer Account signiert ist. **Apple lässt es nach höchstens
+    sechs Monaten ablaufen**, danach schlägt jede Anmeldung fehl. Rechtzeitig neu erzeugen.
+  - Provider „Email“ aus
   - Auth-Hook `before_user_created` (Postgres-Funktion `public.before_user_created`)
-  - Mail-Vorlagen „Magic Link" und „Confirm signup" aus `supabase/templates`
+- Im Apple Developer Account: App ID mit „Sign in with Apple“, Services ID mit der Domain
+  `<projekt>.supabase.co` und der Return URL `https://<projekt>.supabase.co/auth/v1/callback`,
+  Key mit „Sign in with Apple“.
 
 ### Einladungscodes anlegen
 
-Ohne gültigen Code legt der Hook `before_user_created` kein Konto an. Den Code erzeugt die
-Datenbank selbst (`default new_invite_code()`):
+Ein Konto entsteht mit der ersten Anmeldung bei Apple. Ohne eingelösten Code sieht es keine Daten;
+den Code gibt es danach auf `/register` ein. Den Code erzeugt die Datenbank selbst
+(`default new_invite_code()`):
 
 ```sql
 insert into invite_codes (note) values ('…') returning code;

@@ -11,12 +11,9 @@ export interface FakeAuthError {
   code?: string;
 }
 
-export interface OtpRequest {
-  email: string;
-  shouldCreateUser: boolean;
-  emailRedirectTo: string | undefined;
-  /** Kommt als `user_metadata.invite_code` beim Hook an. */
-  inviteCode: string | undefined;
+export interface OAuthRequest {
+  provider: string;
+  redirectTo: string | undefined;
 }
 
 /**
@@ -30,8 +27,8 @@ export class FakeSupabase {
   betaAccess = false;
 
   getSessionCalls = 0;
-  otpRequests: OtpRequest[] = [];
-  otpError: FakeAuthError | null = null;
+  oauthRequests: OAuthRequest[] = [];
+  oauthError: FakeAuthError | null = null;
 
   exchangedCodes: string[] = [];
   exchangeError: FakeAuthError | null = null;
@@ -108,22 +105,12 @@ export class FakeSupabase {
       };
     },
 
-    signInWithOtp: async (params: {
-      email: string;
-      options?: {
-        shouldCreateUser?: boolean;
-        emailRedirectTo?: string;
-        data?: Record<string, unknown>;
-      };
-    }) => {
-      const inviteCode = params.options?.data?.['invite_code'];
-      this.otpRequests.push({
-        email: params.email,
-        shouldCreateUser: params.options?.shouldCreateUser ?? true,
-        emailRedirectTo: params.options?.emailRedirectTo,
-        inviteCode: typeof inviteCode === 'string' ? inviteCode : undefined,
+    signInWithOAuth: async (params: { provider: string; options?: { redirectTo?: string } }) => {
+      this.oauthRequests.push({
+        provider: params.provider,
+        redirectTo: params.options?.redirectTo,
       });
-      return { data: {}, error: this.otpError };
+      return { data: {}, error: this.oauthError };
     },
 
     exchangeCodeForSession: async (code: string) => {

@@ -1,19 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 
-import {
-  readDpaConsent,
-  readInviteCode,
-  rememberDpaConsent,
-  rememberInviteCode,
-} from '@lib/auth/domain';
 import { SUPABASE } from '@lib/shared/data-access-supabase';
 import { FakeSupabase } from '@lib/shared/data-access-supabase/testing';
 
 import { CallbackPage } from './callback-page';
-
-/** Wer nach dem Tausch angemeldet ist (`FakeSupabase.exchangeUser`). */
-const EMAIL = 'neu@dailyfi.test';
 
 interface Harness {
   fixture: ComponentFixture<CallbackPage>;
@@ -57,13 +48,11 @@ function alertText(element: HTMLElement): string {
 describe('CallbackPage', () => {
   beforeEach(() => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    localStorage.clear();
     globalThis.location.hash = '';
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
-    localStorage.clear();
     globalThis.location.hash = '';
   });
 
@@ -85,142 +74,49 @@ describe('CallbackPage', () => {
     expect(harness.navigate).toHaveBeenCalledWith(['/register'], { replaceUrl: true });
   });
 
-  it('loest den auf /register gemerkten Code ein', async () => {
-    rememberInviteCode('DAILYFI-DEV-2', EMAIL);
-
+  it('loest selbst keinen Code ein und speichert keine Zustimmung', async () => {
+    // Beides geschieht erst auf /register bzw. der Zustimmungsseite.
     const harness = await setup({ query: { code: 'pkce-123' } });
-
-    expect(harness.fake.redeemedCodes).toEqual(['DAILYFI-DEV-2']);
-    expect(harness.navigate).toHaveBeenCalledWith(['/week'], { replaceUrl: true });
-    // Eingeloest heisst aufgebraucht: der Code liegt danach nicht mehr herum.
-    expect(readInviteCode(EMAIL)).toBeNull();
-  });
-
-  it('speichert die auf /register erteilte Zustimmung zum AV-Vertrag', async () => {
-    rememberInviteCode('DAILYFI-DEV-2', EMAIL);
-    rememberDpaConsent('1.0', EMAIL);
-
-    const harness = await setup({ query: { code: 'pkce-123' } });
-
-    expect(harness.fake.acceptDpaCalls).toEqual(['1.0']);
-    expect(readDpaConsent(EMAIL)).toBeNull();
-    expect(harness.navigate).toHaveBeenCalledWith(['/week'], { replaceUrl: true });
-  });
-
-  it('uebernimmt keine Zustimmung und keinen Code einer anderen Adresse', async () => {
-    // Geteilter Rechner: A hat sich registriert, B meldet sich danach an.
-    rememberInviteCode('DAILYFI-DEV-2', 'a@dailyfi.test');
-    rememberDpaConsent('1.0', 'a@dailyfi.test');
-
-    const harness = await setup({
-      query: { code: 'pkce-123' },
-      configure: (fake) => {
-        fake.betaAccess = true;
-      },
-    });
 
     expect(harness.fake.redeemedCodes).toEqual([]);
     expect(harness.fake.acceptDpaCalls).toEqual([]);
-    // Verworfen, nicht nur uebergangen.
-    expect(localStorage.getItem('dailyfi.pending-invite-code')).toBeNull();
-    expect(localStorage.getItem('dailyfi.pending-dpa-consent')).toBeNull();
-    expect(harness.navigate).toHaveBeenCalledWith(['/week'], { replaceUrl: true });
   });
 
-  it('speichert keine Zustimmung, solange der Code nicht eingeloest ist', async () => {
-    rememberInviteCode('FALSCH-123', EMAIL);
-    rememberDpaConsent('1.0', EMAIL);
-
+  it('meldet eine abgebrochene Anmeldung bei Apple', async () => {
     const harness = await setup({
-      query: { code: 'pkce-123' },
-      configure: (fake) => {
-        fake.redeemResult = 'invalid';
-      },
+      query: { error: 'access_denied', error_description: 'user cancelled' },
     });
 
-    expect(harness.fake.acceptDpaCalls).toEqual([]);
-    // Liegt weiter bereit fuer den naechsten Versuch mit gueltigem Code.
-    expect(readDpaConsent(EMAIL)).toBe('1.0');
-  });
-
-  it('schickt bei ungueltigem Code zur Eingabe zurueck und sagt warum', async () => {
-    rememberInviteCode('FALSCH-123', EMAIL);
-
-    const harness = await setup({
-      query: { code: 'pkce-123' },
-      configure: (fake) => {
-        fake.redeemResult = 'invalid';
-      },
-    });
-
-    expect(harness.navigate).toHaveBeenCalledWith(['/register'], {
-      replaceUrl: true,
-      queryParams: { reason: 'invalid-code' },
-    });
-    expect(readInviteCode(EMAIL)).toBeNull();
-  });
-
-  it('nennt einen abgelaufenen Link beim Namen', async () => {
-    const harness = await setup({
-      query: { error: 'access_denied', error_code: 'otp_expired' },
-    });
-
-    expect(alertText(harness.element)).toContain('abgelaufen');
+    expect(alertText(harness.element)).toContain('abgebrochen');
     expect(harness.fake.exchangedCodes).toHaveLength(0);
     expect(harness.navigate).not.toHaveBeenCalled();
   });
 
   it('liest den Fehler auch hinter der Raute', async () => {
-    globalThis.location.hash = '#error=access_denied&error_code=otp_expired';
+    globalThis.location.hash = '#error=server_error&error_code=unexpected_failure';
 
     const harness = await setup({});
 
-    expect(alertText(harness.element)).toContain('abgelaufen');
+    expect(alertText(harness.element)).toContain('nicht geklappt');
   });
 
-  it('meldet einen Link ohne Code als unvollstaendig', async () => {
+  it('nennt einen vom Server abgewiesenen Ruecksprung nicht abgebrochen', async () => {
+    const harness = await setup({
+      query: { error: 'server_error', error_description: 'Error running hook URI' },
+    });
+
+    expect(alertText(harness.element)).toContain('nicht geklappt');
+    expect(alertText(harness.element)).not.toContain('abgebrochen');
+  });
+
+  it('meldet einen Ruecksprung ohne Code als unvollstaendig', async () => {
     const harness = await setup({});
 
     expect(alertText(harness.element)).toContain('unvollständig');
     expect(harness.navigate).not.toHaveBeenCalled();
   });
 
-  it('haelt eine Serverstoerung beim Einloesen vom Code fern', async () => {
-    rememberInviteCode('DAILYFI-DEV-2', EMAIL);
-
-    const harness = await setup({
-      query: { code: 'pkce-123' },
-      configure: (fake) => {
-        fake.redeemError = { message: 'connection reset' };
-      },
-    });
-
-    expect(harness.navigate).toHaveBeenCalledWith(['/register'], {
-      replaceUrl: true,
-      queryParams: { reason: 'server-error' },
-    });
-    // Der Code war vielleicht gueltig — er darf die Stoerung ueberleben.
-    expect(readInviteCode(EMAIL)).toBe('DAILYFI-DEV-2');
-  });
-
-  it('schickt bei gesperrtem Konto zur Eingabe und behaelt den Code', async () => {
-    rememberInviteCode('DF-ABCDE-FGHIJ-KLMNO-PQRST', EMAIL);
-
-    const harness = await setup({
-      query: { code: 'pkce-123' },
-      configure: (fake) => {
-        fake.redeemResult = 'locked';
-      },
-    });
-
-    expect(harness.navigate).toHaveBeenCalledWith(['/register'], {
-      replaceUrl: true,
-      queryParams: { reason: 'locked' },
-    });
-    expect(readInviteCode(EMAIL)).toBe('DF-ABCDE-FGHIJ-KLMNO-PQRST');
-  });
-
-  it('erklaert den in einem anderen Browser geoeffneten Link', async () => {
+  it('meldet einen fehlenden Verifier ohne Session', async () => {
     const harness = await setup({
       query: { code: 'pkce-123' },
       configure: (fake) => {
@@ -232,7 +128,7 @@ describe('CallbackPage', () => {
       },
     });
 
-    expect(alertText(harness.element)).toContain('anderen Browser');
+    expect(alertText(harness.element)).toContain('nicht abgeschlossen');
     expect(harness.navigate).not.toHaveBeenCalled();
   });
 
@@ -256,7 +152,23 @@ describe('CallbackPage', () => {
     expect(harness.navigate).toHaveBeenCalledWith(['/week'], { replaceUrl: true });
   });
 
-  it('bietet bei jedem Fehlschlag einen neuen Anmeldelink an', async () => {
+  it('schickt bei der Zurueck-Taste ohne Freischaltung zur Code-Eingabe', async () => {
+    const harness = await setup({
+      query: { code: 'pkce-123' },
+      configure: (fake) => {
+        fake.user = { id: 'u1', email: 'thorsten@dailyfi.test' };
+        fake.exchangeError = {
+          message: 'PKCE code verifier not found in storage',
+          code: 'pkce_code_verifier_not_found',
+          status: 400,
+        };
+      },
+    });
+
+    expect(harness.navigate).toHaveBeenCalledWith(['/register'], { replaceUrl: true });
+  });
+
+  it('fuehrt bei jedem Fehlschlag zurueck zur Anmeldung', async () => {
     const harness = await setup({});
 
     expect(harness.element.querySelector('a[href="/login"]')).not.toBeNull();

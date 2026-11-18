@@ -1,10 +1,9 @@
 @use 'abstracts' as *;
 
-// Gemeinsame Form der drei Auth-Seiten. Buttons, Felder und Fehlertexte kommen
+// Gemeinsame Form der Auth-Seiten. Buttons, Felder und Fehlertexte kommen
 // aus der Styles-Lib — hier steht nur, was die Karte anordnet.
 
-form,
-.sent {
+form {
   display: flex;
   flex-direction: column;
   gap: space(5);
@@ -20,30 +19,11 @@ form,
   width: 100%;
 }
 
-// „Mail ist unterwegs": Box mit Symbol, bleibt in der Karte stehen.
+// Statuskasten der Rücksprungseite, solange die Anmeldung abgeschlossen wird.
 .sent {
-  gap: space(3);
   padding: space(4);
   border-radius: radius(md);
   background: var(--surface-sunken);
-}
-
-.sent-head {
-  display: flex;
-  align-items: center;
-  gap: space(2);
-  color: var(--success);
-  --icon-size: 20px;
-}
-
-.sent-title {
-  display: inline-block;
-  color: var(--text);
-  font-size: font-size(md);
-}
-
-.sent strong {
-  overflow-wrap: anywhere;
 }
 
 .footer {
@@ -55,4 +35,12 @@ form,
 
 .footer a {
   font-weight: font-weight(semibold);
+}
+
+// Nach den Vorgaben von Apple: Logo links vom Text, beides in der Schriftfarbe.
+.apple-logo {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  flex-shrink: 0;
 }

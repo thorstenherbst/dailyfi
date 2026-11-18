@@ -103,9 +103,9 @@ describe('Route-Guards', () => {
   });
 
   describe('inviteCodeOnly (/register)', () => {
-    it('laesst Gaeste registrieren', async () => {
+    it('schickt Gaeste zur Anmeldung — ohne Konto gibt es nichts einzuloesen', async () => {
       setup();
-      await expect(run(inviteCodeOnly)).resolves.toBe(true);
+      await expect(run(inviteCodeOnly)).resolves.toBe('/login');
     });
 
     it('laesst ein angemeldetes Konto ohne Code den Code nachtragen', async () => {

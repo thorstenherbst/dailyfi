@@ -17,9 +17,6 @@
       "@lib/auth/data-access": [
         "./libs/auth/data-access/src/index.ts"
       ],
-      "@lib/auth/domain": [
-        "./libs/auth/domain/src/index.ts"
-      ],
       "@lib/auth/feature": [
         "./libs/auth/feature/src/index.ts"
       ],

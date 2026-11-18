@@ -99,13 +99,16 @@ export const guestOnly: CanActivateFn = async () => {
 };
 
 /**
- * `/register`: offen fuer Gaeste **und** fuer angemeldete Konten ohne Code —
- * genau die brauchen das Formular. Nur wer vollstaendig freigeschaltet ist,
- * wird weitergeschickt.
+ * `/register`: die Code-Eingabe fuer angemeldete Konten ohne Freischaltung.
+ * Gaeste muessen sich erst mit Apple anmelden — eingeloest wird ein Code an
+ * `auth.uid()`. Wer schon freigeschaltet ist, geht weiter in die Anwendung.
  */
 export const inviteCodeOnly: CanActivateFn = async () => {
   const session = inject(SessionStore);
   const router = inject(Router);
 
-  return (await session.ensureAccess()) ? router.createUrlTree(['/week']) : true;
+  if (await session.ensureAccess()) {
+    return router.createUrlTree(['/week']);
+  }
+  return session.user() ? true : router.createUrlTree(['/login']);
 };

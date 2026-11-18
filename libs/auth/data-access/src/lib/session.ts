@@ -16,27 +16,22 @@ export interface SessionUser {
   readonly email: string;
 }
 
-/** Was aus einer Magic-Link-Anforderung zur Registrierung geworden ist. */
-export type MagicLinkOutcome = 'sent' | 'invalid-code' | 'rate-limited' | 'failed';
+/**
+ * Start der Anmeldung mit Apple. Klappt er, verlaesst der Browser die Seite;
+ * `failed` heisst, er ist geblieben.
+ */
+export type AppleSignInOutcome = 'redirecting' | 'failed';
 
 /** Ergebnis von `redeem_invite_code()`, plus ein Ausgang fuer Serverfehler. */
 export type RedeemOutcome = 'redeemed' | 'already_redeemed' | 'invalid' | 'locked' | 'failed';
 
-/** Ausgang des Magic-Link-Ruecksprungs. */
+/** Ausgang des Ruecksprungs von Apple. */
 export type CompleteSignInOutcome = 'ok' | 'spent-or-foreign' | 'failed';
 
 /**
- * Supabase liefert bei zu vielen Mails 429. Der Code kommt je nach Endpunkt
- * einmal als Status und einmal als Textkennung.
- */
-function isRateLimit(error: { status?: number; code?: string } | null): boolean {
-  return error?.status === 429 || (error?.code ?? '').includes('rate_limit');
-}
-
-/**
- * PKCE legt den Code-Verifier im Browser ab, der den Link angefordert hat.
- * Fehlt er, gibt es genau zwei Gruende: die Mail wurde in einem anderen Browser
- * geoeffnet, oder dieser Link ist hier bereits eingeloest worden — supabase-js
+ * PKCE legt den Code-Verifier im Browser ab, der die Anmeldung gestartet hat.
+ * Fehlt er, gibt es genau zwei Gruende: der Ruecksprung landet in einem anderen
+ * Browser, oder dieser Code ist hier bereits eingeloest worden — supabase-js
  * loescht den Verifier nach dem ersten erfolgreichen Tausch, und die
  * Zurueck-Taste fuehrt danach wieder auf dieselbe Adresse.
  *
@@ -153,58 +148,48 @@ export class SessionStore implements SessionRecovery {
   }
 
   /**
-   * Magic Link zum Anmelden. **Ohne Rueckmeldung, und das ist der Zweck.**
+   * Anmeldung mit Apple, der einzige Weg in die Anwendung. Leitet zu Apple
+   * weiter; zurueck kommt der Browser ueber `/auth/callback` mit einem Code,
+   * den `completeSignIn` tauscht.
    *
-   * Der Server antwortet unterschiedlich, je nachdem ob es die Adresse gibt:
-   * 200 fuer ein vorhandenes Konto, 422 fuer ein unbekanntes — und beim zweiten
-   * Versuch 429 fuer das vorhandene, weil nur dann eine Mail rausging und die
-   * Drosselung greift. Jede dieser Unterscheidungen, die bis in die Oberflaeche
-   * durchschlaegt, macht aus der Anmeldeseite ein Nutzerverzeichnis.
-   *
-   * Der 429 fuehrt den Nutzer dabei nicht in die Irre: er entsteht nur, wenn
-   * gerade eine Mail an genau diese Adresse rausging. „Ein Link ist unterwegs"
-   * stimmt dann.
+   * Ein neues Konto entsteht dabei auch ohne Einladungscode. Freigeschaltet ist
+   * es damit nicht: ohne eingeloesten Code liefert jede RLS-Policy nichts, und
+   * der Guard schickt zur Code-Eingabe.
    */
-  async requestLoginLink(email: string): Promise<void> {
-    await this.sendOtp(email, false);
+  async signInWithApple(): Promise<AppleSignInOutcome> {
+    const { error } = await this.db.auth.signInWithOAuth({
+      provider: 'apple',
+      options: { redirectTo: authCallbackUrl() },
+    });
+
+    if (error) {
+      this.logAuthIssue('Anmeldung mit Apple konnte nicht starten:', error);
+      return 'failed';
+    }
+    return 'redirecting';
   }
 
-  /**
-   * Magic Link zur Registrierung. Der Einladungscode reist als
-   * `user_metadata.invite_code` mit und wird **vor** der Kontoanlage geprueft:
-   * `before_user_created` in der Datenbank weist einen ungueltigen Code mit
-   * HTTP 403 ab, und dann entsteht weder ein Konto noch geht eine Mail raus.
-   *
-   * Der Preis dafuer steht in der Uebergabe: fuer eine Adresse, die es schon
-   * gibt, laeuft der Hook nicht — ein erfundener Code liefert dort 200 statt
-   * 403. Damit sagt `/register`, ob eine Adresse bereits ein Konto hat. Das ist
-   * der uebliche Handel einer Registrierungsseite; `/login` bleibt davon
-   * unberuehrt und antwortet weiter immer gleich.
-   */
-  async requestSignupLink(email: string, inviteCode: string): Promise<MagicLinkOutcome> {
-    const error = await this.sendOtp(email, true, inviteCode);
-    if (!error) {
-      return 'sent';
-    }
-    // 403 kommt an diesem Endpunkt nur aus dem Hook.
-    if (error.status === 403) {
-      return 'invalid-code';
-    }
-    return isRateLimit(error) ? 'rate-limited' : 'failed';
-  }
-
-  /** Ruecksprung aus der Mail: Code gegen eine Session tauschen. */
+  /** Ruecksprung von Apple: Code gegen eine Session tauschen. */
   async completeSignIn(code: string): Promise<CompleteSignInOutcome> {
     const { data, error } = await this.db.auth.exchangeCodeForSession(code);
 
     if (error) {
-      this.logAuthIssue('Anmeldung ueber den Magic Link fehlgeschlagen:', error);
+      this.logAuthIssue('Anmeldung mit Apple fehlgeschlagen:', error);
       return isMissingVerifier(error) ? 'spent-or-foreign' : 'failed';
     }
 
     this.applyUser(data.session?.user ?? null);
     await this.refreshAccess();
     return 'ok';
+  }
+
+  /**
+   * Fehler, den Supabase an den Ruecksprung gehaengt hat (`?error=…`):
+   * abgebrochen bei Apple, Provider falsch eingerichtet, vom Hook abgewiesen.
+   * Nur fuer die lokale Fehlersuche, wie alle Auth-Fehler.
+   */
+  reportSignInError(details: unknown): void {
+    this.logAuthIssue('Ruecksprung der Anmeldung meldet einen Fehler:', details);
   }
 
   /**
@@ -404,35 +389,13 @@ export class SessionStore implements SessionRecovery {
     await this.refreshAccess();
   }
 
-  private async sendOtp(
-    email: string,
-    shouldCreateUser: boolean,
-    inviteCode?: string,
-  ): Promise<{ status?: number; code?: string } | null> {
-    const { error } = await this.db.auth.signInWithOtp({
-      email: email.trim(),
-      options: {
-        shouldCreateUser,
-        emailRedirectTo: authCallbackUrl(),
-        // Landet im Hook als `user.user_metadata.invite_code`.
-        ...(inviteCode ? { data: { invite_code: inviteCode } } : {}),
-      },
-    });
-
-    if (error) {
-      this.logAuthIssue('Magic Link konnte nicht verschickt werden:', error);
-    }
-    return error;
-  }
-
   /**
    * Fehler aus dem Anmeldeweg gehoeren nur in die lokale Fehlersuche.
    *
-   * In der ausgelieferten Anwendung wuerde die Konsole sonst genau das
-   * ausplaudern, was die Oberflaeche verschweigt: „Signups not allowed for otp"
-   * heisst, dass es dieses Konto nicht gibt, die Drosselungsmeldung heisst, dass
-   * es existiert. Ohne jedes Werkzeug ablesbar. Dieselbe Begruendung steht schon
-   * ueber `RepositoryError` in `shared/data-access-supabase`.
+   * In der ausgelieferten Anwendung gehoeren Serverantworten nicht in die
+   * Konsole: sie verraten mehr ueber Konten und Zugang, als die Oberflaeche
+   * sagt. Dieselbe Begruendung steht ueber `RepositoryError` in
+   * `shared/data-access-supabase`.
    */
   private logAuthIssue(message: string, error: unknown): void {
     if (this.logsAuthIssues) {
@@ -454,10 +417,11 @@ export class SessionStore implements SessionRecovery {
 }
 
 /**
- * Ziel des Magic Links. Muss buchstabengleich in `additional_redirect_urls`
- * (`supabase/config.toml`) stehen — GoTrue tauscht eine nicht passende Adresse
- * stillschweigend gegen `site_url`, der Link landet dann auf `/` und der Code
- * verfaellt, ohne dass irgendwo ein Fehler steht.
+ * Ziel des Ruecksprungs nach der Anmeldung. Muss buchstabengleich in den
+ * Redirect-URLs des Projekts stehen (`additional_redirect_urls` in
+ * `supabase/config.toml`) — GoTrue tauscht eine nicht passende Adresse
+ * stillschweigend gegen `site_url`, der Ruecksprung landet dann auf `/` und der
+ * Code verfaellt, ohne dass irgendwo ein Fehler steht.
  */
 export function authCallbackUrl(): string {
   return `${globalThis.location.origin}/auth/callback`;

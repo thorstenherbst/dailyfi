@@ -61,66 +61,21 @@ describe('SessionStore', () => {
     expect(store.hasBetaAccess()).toBe(false);
   });
 
-  it('schickt den Magic Link auf /auth/callback', async () => {
+  it('startet die Anmeldung mit Apple und kommt auf /auth/callback zurueck', async () => {
     const { fake, store } = setup();
 
-    await store.requestLoginLink('  thorsten@dailyfi.test  ');
+    await expect(store.signInWithApple()).resolves.toBe('redirecting');
 
-    expect(fake.otpRequests).toEqual([
-      {
-        email: 'thorsten@dailyfi.test',
-        shouldCreateUser: false,
-        emailRedirectTo: authCallbackUrl(),
-        // Kein Einladungscode: /login legt nichts an, der Hook laeuft dort nicht.
-        inviteCode: undefined,
-      },
-    ]);
+    expect(fake.oauthRequests).toEqual([{ provider: 'apple', redirectTo: authCallbackUrl() }]);
     expect(authCallbackUrl()).toMatch(/\/auth\/callback$/);
   });
 
-  it('gibt beim Anmelden nichts zurueck, woran sich ein Konto erkennen liesse', async () => {
-    // 422 heisst „Konto unbekannt", 429 heisst „Konto vorhanden, Mail ging
-    // gerade raus". Beides darf die Seite nicht unterscheiden koennen.
-    for (const error of [
-      null,
-      { message: 'Signups not allowed for otp', status: 422 },
-      { message: 'you can only request this after 60 seconds', status: 429 },
-    ]) {
-      TestBed.resetTestingModule();
-      const { store } = setup((fake) => {
-        fake.otpError = error;
-      });
-
-      await expect(store.requestLoginLink('jemand@example.com')).resolves.toBeUndefined();
-    }
-  });
-
-  it('schickt den Einladungscode zur Registrierung mit', async () => {
-    const { fake, store } = setup();
-
-    await expect(store.requestSignupLink('neu@dailyfi.test', 'DF-ABCDE')).resolves.toBe('sent');
-
-    expect(fake.otpRequests[0].shouldCreateUser).toBe(true);
-    expect(fake.otpRequests[0].inviteCode).toBe('DF-ABCDE');
-  });
-
-  it('meldet den vom Hook abgewiesenen Code als solchen', async () => {
-    // 403 kommt an diesem Endpunkt nur aus `before_user_created`.
+  it('meldet, wenn die Anmeldung mit Apple nicht starten kann', async () => {
     const { store } = setup((fake) => {
-      fake.otpError = { message: 'Einladungscode ungueltig oder bereits verwendet.', status: 403 };
+      fake.oauthError = { message: 'Unsupported provider: provider is not enabled', status: 400 };
     });
 
-    await expect(store.requestSignupLink('neu@dailyfi.test', 'ERFUNDEN-1')).resolves.toBe(
-      'invalid-code',
-    );
-  });
-
-  it('meldet andere Fehler der Registrierung ehrlich', async () => {
-    const { store } = setup((fake) => {
-      fake.otpError = { message: 'smtp down', status: 500 };
-    });
-
-    await expect(store.requestSignupLink('neu@dailyfi.test', 'DF-ABCDE')).resolves.toBe('failed');
+    await expect(store.signInWithApple()).resolves.toBe('failed');
   });
 
   it('reicht die Sperre des Fehlversuchszaehlers durch', async () => {
@@ -134,7 +89,7 @@ describe('SessionStore', () => {
     expect(store.hasBetaAccess()).toBe(false);
   });
 
-  it('tauscht den Code der Mail gegen eine Session', async () => {
+  it('tauscht den Code des Ruecksprungs gegen eine Session', async () => {
     const { fake, store } = setup();
 
     await expect(store.completeSignIn('abc123')).resolves.toBe('ok');
@@ -278,7 +233,7 @@ describe('SessionStore', () => {
   describe('Protokoll der Auth-Fehler', () => {
     // Sicherheitsanforderung (README): Im Produktionsbuild verraet die Konsole
     // nicht, was die Oberflaeche verschweigt. Geprueft ueber einen echten
-    // Fehlerweg, den gescheiterten Tausch des Magic-Link-Codes.
+    // Fehlerweg, den gescheiterten Tausch des Codes nach der Anmeldung.
     async function failSignIn(config: SupabaseConfig | null): Promise<void> {
       const fake = new FakeSupabase();
       fake.exchangeError = { message: 'invalid flow state', code: 'flow_state_not_found' };
@@ -304,7 +259,7 @@ describe('SessionStore', () => {
       await failSignIn({ ...config, production: false });
 
       expect(console.error).toHaveBeenCalledWith(
-        '[Dailyfi] Anmeldung ueber den Magic Link fehlgeschlagen:',
+        '[Dailyfi] Anmeldung mit Apple fehlgeschlagen:',
         expect.objectContaining({ code: 'flow_state_not_found' }),
       );
     });

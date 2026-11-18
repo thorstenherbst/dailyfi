@@ -1,6 +1,7 @@
 # auth/feature
 
-Seiten für Anmeldung und Registrierung per Magic Link sowie die Zustimmung zum AV-Vertrag.
+Seiten für die Anmeldung mit Apple, die Eingabe des Einladungscodes und die Zustimmung zum
+AV-Vertrag.
 
 - `loadLoginPage` (`/login`), `loadRegisterPage` (`/register`), `loadCallbackPage`
   (`/auth/callback`), `loadConsentPage` (`/zustimmung`, Zustimmung zum AV-Vertrag):

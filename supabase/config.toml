@@ -97,7 +97,8 @@ openai_api_key = "env(OPENAI_API_KEY)"
 # Email testing server. Emails sent with the local dev setup are not actually sent - rather, they
 # are monitored, and you can view the emails that would have been sent from the web interface.
 [inbucket]
-enabled = true
+# Aus: Dailyfi verschickt keine Mails, angemeldet wird mit Apple.
+enabled = false
 # Port to use for the email testing server web interface.
 port = 54324
 # Uncomment to expose additional ports for testing user applications that send emails.
@@ -207,8 +208,8 @@ web3 = 30
 # secret = ""
 
 [auth.email]
-# Allow/disallow new user signups via email to your project.
-enable_signup = true
+# Angemeldet wird nur mit Apple; ueber E-Mail entstehen keine Konten.
+enable_signup = false
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
@@ -232,23 +233,6 @@ otp_expiry = 3600
 # pass = "env(SENDGRID_API_KEY)"
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
-
-# Eigene Vorlagen, weil die Mail die einzige Seite des Ablaufs ist, die der
-# Nutzer ausserhalb der Anwendung liest — Supabases Standard ist englisch und
-# bietet einen sechsstelligen Code an, fuer den es in Dailyfi kein Feld gibt.
-#
-# Achtung: Solange `enable_confirmations = false` gilt, verschickt GoTrue auch
-# fuer ein frisch angelegtes Konto die `magic_link`-Vorlage. Die traegt deshalb
-# beide Faelle. `confirmation` liegt bereit, falls die Bestaetigungspflicht
-# spaeter eingeschaltet wird — heute bekommt sie niemand zu sehen (nachgemessen
-# in Mailpit, beide Wege liefern `magic_link`).
-[auth.email.template.magic_link]
-subject = "Dein Link für Dailyfi"
-content_path = "./supabase/templates/magic-link.html"
-
-[auth.email.template.confirmation]
-subject = "Dailyfi: Registrierung abschließen"
-content_path = "./supabase/templates/confirmation.html"
 
 # Uncomment to customize email template
 # [auth.email.template.invite]
@@ -282,9 +266,9 @@ max_frequency = "5s"
 # Force log out if the user has been inactive longer than the specified duration.
 # inactivity_timeout = "8h"
 
-# Kein Konto ohne gueltigen Einladungscode. Die Funktion liegt in der Migration
-# 20260930000001_invite_hardening.sql; der Code reist als
-# raw_user_meta_data.invite_code mit.
+# Kein Konto ohne gueltigen Einladungscode, ausser ueber Apple (eingeloest wird
+# dort nach der Anmeldung). Die Funktion liegt in den Migrationen
+# 20260930000001_invite_hardening.sql und 20261118000001_apple_sign_in.sql.
 [auth.hook.before_user_created]
 enabled = true
 uri = "pg-functions://postgres/public/before_user_created"
@@ -328,6 +312,9 @@ max_frequency = "5s"
 # Use an external OAuth provider. The full list of providers are: `apple`, `azure`, `bitbucket`,
 # `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin_oidc`, `notion`, `twitch`,
 # `twitter`, `x`, `slack`, `spotify`, `workos`, `zoom`.
+# Einziger Anmeldeweg. Lokal aus: Apple leitet nur auf eine HTTPS-Adresse
+# einer registrierten Domain zurueck, nicht auf 127.0.0.1. In der Cloud wird
+# der Provider im Dashboard gepflegt (siehe README).
 [auth.external.apple]
 enabled = false
 client_id = ""
