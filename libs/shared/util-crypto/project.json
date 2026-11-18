@@ -1,0 +1,13 @@
+{
+  "name": "shared-util-crypto",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/util-crypto/src",
+  "projectType": "library",
+  "prefix": "app",
+  "tags": ["domain:shared", "type:util"],
+  "targets": {
+    "test": {
+      "executor": "@angular/build:unit-test"
+    }
+  }
+}

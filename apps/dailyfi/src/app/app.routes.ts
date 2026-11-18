@@ -6,12 +6,17 @@ import {
   inviteCodeOnly,
   requireAccount,
   requireDpa,
+  requireUnlocked,
+  vaultLocked,
+  vaultMissing,
 } from '@lib/auth/data-access';
 import {
   loadCallbackPage,
   loadConsentPage,
   loadLoginPage,
   loadRegisterPage,
+  loadUnlockPage,
+  loadVaultSetupPage,
 } from '@lib/auth/feature';
 import { loadDpaPage, loadImprintPage, loadPrivacyPage } from '@lib/legal/feature';
 import { loadProjectsPage } from '@lib/projects/feature';
@@ -48,10 +53,24 @@ export const routes: Routes = [
     canActivate: [requireAccount, dpaPending],
     loadComponent: loadConsentPage,
   },
+  // Datenschluessel: einmal einrichten, nach jedem Laden entsperren. Davor
+  // stehen Zugang und Zustimmung, wie vor der Anwendung selbst.
+  {
+    path: 'schluessel',
+    title: 'Verschlüsselung einrichten — Dailyfi',
+    canActivate: [requireAccount, requireDpa, vaultMissing],
+    loadComponent: loadVaultSetupPage,
+  },
+  {
+    path: 'entsperren',
+    title: 'Entsperren — Dailyfi',
+    canActivate: [requireAccount, requireDpa, vaultLocked],
+    loadComponent: loadUnlockPage,
+  },
   {
     path: 'week',
     title: 'Woche — Dailyfi',
-    canActivate: [requireAccount, requireDpa],
+    canActivate: [requireAccount, requireDpa, requireUnlocked],
     // Ungespeichertes im Panel: Hinweis statt stillem Verwerfen.
     canDeactivate: [unsavedChangesGuard],
     loadComponent: loadWeekPage,
@@ -59,7 +78,7 @@ export const routes: Routes = [
   {
     path: 'projects',
     title: 'Projekte — Dailyfi',
-    canActivate: [requireAccount, requireDpa],
+    canActivate: [requireAccount, requireDpa, requireUnlocked],
     // Ungespeichertes in einer Zeile: Hinweis in der Zeile statt stillem Verwerfen.
     canDeactivate: [unsavedChangesGuard],
     loadComponent: loadProjectsPage,
@@ -67,7 +86,7 @@ export const routes: Routes = [
   {
     path: 'reports',
     title: 'Reports — Dailyfi',
-    canActivate: [requireAccount, requireDpa],
+    canActivate: [requireAccount, requireDpa, requireUnlocked],
     loadComponent: loadReportsPage,
   },
   // Rechtstexte ohne Guard: abgemeldet wie angemeldet erreichbar.

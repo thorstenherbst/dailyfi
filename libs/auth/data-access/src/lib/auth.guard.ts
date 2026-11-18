@@ -4,22 +4,36 @@ import { CanActivateFn, Router } from '@angular/router';
 import { DPA_VERSION } from '@lib/legal/domain';
 
 import { SessionStore } from './session';
+import { VaultStore } from './vault';
 
 /** Die Zustimmungsseite, auf die `requireDpa` schickt. */
 export const DPA_CONSENT_PATH = '/zustimmung';
 
+/** Einrichten des Datenschluessels, beim ersten Mal. */
+export const VAULT_SETUP_PATH = '/schluessel';
+
+/** Entsperren des Datenschluessels, nach jedem Laden. */
+export const VAULT_UNLOCK_PATH = '/entsperren';
+
+/** Die Seiten vor der Anwendung; die Shell zeigt dort weder Menue noch Statusleiste. */
+export const GATE_PATHS: readonly string[] = [
+  DPA_CONSENT_PATH,
+  VAULT_SETUP_PATH,
+  VAULT_UNLOCK_PATH,
+];
+
 /**
- * Ziel nach der Zustimmung, aus `?returnUrl=`. Nur Pfade innerhalb der
- * Anwendung: `//andere.example` waere eine fremde Adresse. Fuehrt das erste
- * Pfadsegment auf die Zustimmungsseite (auch `/zustimmung/`, `/Zustimmung;x`),
- * waere es ein Kreis. Alles andere fuehrt in die Woche.
+ * Ziel nach Zustimmung oder Entsperren, aus `?returnUrl=`. Nur Pfade innerhalb
+ * der Anwendung: `//andere.example` waere eine fremde Adresse. Fuehrt das
+ * erste Pfadsegment auf eine dieser Seiten selbst (auch `/zustimmung/`,
+ * `/Entsperren;x`), waere es ein Kreis. Alles andere fuehrt in die Woche.
  */
 export function safeReturnUrl(raw: string | null | undefined): string {
   if (!raw || !raw.startsWith('/') || raw.startsWith('//') || raw.startsWith('/\\')) {
     return '/week';
   }
-  const first = raw.slice(1).split(/[/?#;]/)[0];
-  return decodeSegment(first).toLowerCase() === DPA_CONSENT_PATH.slice(1) ? '/week' : raw;
+  const first = `/${decodeSegment(raw.slice(1).split(/[/?#;]/)[0]).toLowerCase()}`;
+  return GATE_PATHS.includes(first) ? '/week' : raw;
 }
 
 function decodeSegment(segment: string): string {
@@ -111,4 +125,47 @@ export const inviteCodeOnly: CanActivateFn = async () => {
     return router.createUrlTree(['/week']);
   }
   return session.user() ? true : router.createUrlTree(['/login']);
+};
+
+/**
+ * Hinter `requireDpa`: ohne entsperrten Datenschluessel keine Anwendung. Beim
+ * ersten Mal geht es zum Einrichten, danach zum Entsperren — mit der
+ * angefragten Adresse als `returnUrl`.
+ */
+export const requireUnlocked: CanActivateFn = async (_route, state) => {
+  const vault = inject(VaultStore);
+  const router = inject(Router);
+
+  const status = await vault.status();
+  if (status === 'unlocked') {
+    return true;
+  }
+  if (status === 'missing') {
+    return router.createUrlTree([VAULT_SETUP_PATH]);
+  }
+  return router.createUrlTree([VAULT_UNLOCK_PATH], { queryParams: { returnUrl: state.url } });
+};
+
+/** `/schluessel`: nur, solange noch keiner eingerichtet ist. */
+export const vaultMissing: CanActivateFn = async () => {
+  const vault = inject(VaultStore);
+  const router = inject(Router);
+
+  const status = await vault.status();
+  if (status === 'missing') {
+    return true;
+  }
+  return router.createUrlTree([status === 'unlocked' ? '/week' : VAULT_UNLOCK_PATH]);
+};
+
+/** `/entsperren`: wer schon entsperrt ist, geht weiter zum Ziel. */
+export const vaultLocked: CanActivateFn = async (route) => {
+  const vault = inject(VaultStore);
+  const router = inject(Router);
+
+  const status = await vault.status();
+  if (status === 'unlocked') {
+    return router.parseUrl(safeReturnUrl(route.queryParamMap.get('returnUrl')));
+  }
+  return status === 'missing' ? router.createUrlTree([VAULT_SETUP_PATH]) : true;
 };

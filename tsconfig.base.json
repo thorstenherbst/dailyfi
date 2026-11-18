@@ -68,6 +68,9 @@
       "@lib/shared/util-time": [
         "./libs/shared/util-time/src/index.ts"
       ],
+      "@lib/shared/util-crypto": [
+        "./libs/shared/util-crypto/src/index.ts"
+      ],
       "@lib/shared/util-edit": [
         "./libs/shared/util-edit/src/index.ts"
       ],

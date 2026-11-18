@@ -224,6 +224,39 @@ export type Database = {
           },
         ]
       }
+      user_keys: {
+        Row: {
+          created_at: string
+          credential_id: string | null
+          id: string
+          iv: string
+          kind: string
+          salt: string
+          user_id: string
+          wrapped_key: string
+        }
+        Insert: {
+          created_at?: string
+          credential_id?: string | null
+          id?: string
+          iv: string
+          kind: string
+          salt: string
+          user_id?: string
+          wrapped_key: string
+        }
+        Update: {
+          created_at?: string
+          credential_id?: string | null
+          id?: string
+          iv?: string
+          kind?: string
+          salt?: string
+          user_id?: string
+          wrapped_key?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

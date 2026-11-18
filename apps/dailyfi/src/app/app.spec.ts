@@ -38,6 +38,8 @@ async function setup(signedIn: boolean): Promise<{
         { path: 'register', component: Blank },
         { path: 'auth/callback', component: Blank },
         { path: 'zustimmung', component: Blank },
+        { path: 'schluessel', component: Blank },
+        { path: 'entsperren', component: Blank },
       ]),
       { provide: SUPABASE, useValue: fake.asClient() },
       // Wie in app.config.ts.
@@ -154,6 +156,18 @@ describe('App', () => {
     // Jedes Ziel fuehrte per Guard zurueck auf /zustimmung.
     expect(element.querySelector('app-nav-menu')).toBeNull();
     expect(element.querySelector('app-status-bar')).toBeNull();
+  });
+
+  it('zeigt beim Einrichten und Entsperren weder Menü noch Statusleiste', async () => {
+    const { fixture, element } = await setup(true);
+
+    for (const url of ['/schluessel', '/entsperren?returnUrl=%2Fweek']) {
+      await TestBed.inject(Router).navigateByUrl(url);
+      fixture.detectChanges();
+
+      expect(element.querySelector('app-nav-menu'), url).toBeNull();
+      expect(element.querySelector('app-status-bar'), url).toBeNull();
+    }
   });
 
   it('zeigt angemeldet in der Statusleiste, welches Konto offen ist', async () => {

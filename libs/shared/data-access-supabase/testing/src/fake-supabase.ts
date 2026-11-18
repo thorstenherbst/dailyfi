@@ -143,8 +143,51 @@ export class FakeSupabase {
     },
   };
 
-  /** Nur `dpa_acceptances`, nur `select(...).eq('version', …)`. */
+  /** Zeilen in `user_keys` des angemeldeten Nutzers. */
+  userKeys: Array<Record<string, unknown>> = [];
+  userKeysReadError: FakeAuthError | null = null;
+  userKeysInsertError: FakeAuthError | null = null;
+  /** Gespeichert, aber die Antwort geht unterwegs verloren. */
+  userKeysInsertLosesResponse = false;
+  userKeysReads = 0;
+
+  /**
+   * `dpa_acceptances` (nur `select(...).eq('version', …)`) und `user_keys`
+   * (`select(...)` und `insert([...])`).
+   */
   from(table: string) {
+    if (table === 'user_keys') {
+      return {
+        select: async () => {
+          this.userKeysReads += 1;
+          if (this.userKeysReadError) {
+            return { data: null, error: this.userKeysReadError };
+          }
+          return { data: this.user ? this.userKeys.map((row) => ({ ...row })) : [], error: null };
+        },
+        insert: async (rows: Array<Record<string, unknown>>) => {
+          if (this.userKeysInsertError) {
+            return { data: null, error: this.userKeysInsertError };
+          }
+          // Wie `user_keys_one_recovery` und `unique (user_id, credential_id)`:
+          // eine Anweisung, die dagegen verstoesst, schreibt gar nichts.
+          const all = [...this.userKeys, ...rows];
+          const recoveries = all.filter((row) => row['kind'] === 'recovery').length;
+          const ids = all.map((row) => row['credential_id']).filter((id) => id !== null);
+          if (recoveries > 1 || new Set(ids).size !== ids.length) {
+            return {
+              data: null,
+              error: { message: 'duplicate key value violates unique constraint', code: '23505' },
+            };
+          }
+          this.userKeys.push(...rows.map((row) => ({ ...row })));
+          if (this.userKeysInsertLosesResponse) {
+            return { data: null, error: { message: 'Failed to fetch' } };
+          }
+          return { data: null, error: null };
+        },
+      };
+    }
     if (table !== 'dpa_acceptances') {
       throw new Error(`Unerwartete Tabelle: ${table}`);
     }

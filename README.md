@@ -54,7 +54,7 @@ Fachlichkeit liegt in Libs unter `libs/<domäne>/<schicht>`, importiert über `@
 | `reports` | `feature`, `domain`, `data-access` |
 | `auth` | `feature`, `ui`, `data-access` |
 | `legal` | `feature`, `domain` |
-| `shared` | `ui`, `domain`, `data-access-supabase`, `util-time`, `util-browser`, `util-edit`, `styles` |
+| `shared` | `ui`, `domain`, `data-access-supabase`, `util-time`, `util-browser`, `util-edit`, `util-crypto`, `styles` |
 
 Jede Lib trägt einen Tag `type:*` und einen Tag `domain:*`. `@nx/enforce-module-boundaries` in
 `eslint.config.mjs` prüft beide:
@@ -85,6 +85,21 @@ ein Wert gehört: [`libs/shared/styles/README.md`](./libs/shared/styles/README.m
 
 Schriften: Inter und JetBrains Mono über `@fontsource`, beide unter der SIL Open Font License 1.1.
 Die Lizenztexte liegen in `apps/dailyfi/public/fonts-LICENSE.txt` und werden mit ausgeliefert.
+
+## Verschlüsselung
+
+Inhalte werden im Browser verschlüsselt, bevor sie gespeichert werden. Jedes Konto hat einen
+Datenschlüssel (AES-256-GCM), der nur verpackt in `user_keys` liegt: einmal je Passkey und einmal
+mit dem Wiederherstellungsschlüssel. Den Schlüssel zum Verpacken liefert die PRF-Erweiterung von
+WebAuthn bzw. die 32 Bytes des Wiederherstellungsschlüssels, jeweils über HKDF. Entsperrt liegt
+der Datenschlüssel nur im Arbeitsspeicher (`DataKeyHolder`, nicht exportierbar).
+
+- Erste Anmeldung: `/schluessel` legt Passkey und Datenschlüssel an und zeigt den
+  Wiederherstellungsschlüssel einmal. Gespeichert wird erst, wenn bestätigt ist, dass er
+  aufbewahrt wurde.
+- Jedes Öffnen: `/entsperren` fragt den Passkey ab, ersatzweise den Wiederherstellungsschlüssel.
+- Passkeys gehören zur Domain der Seite. Nach einem Umzug auf eine andere Domain entsperrt nur
+  noch der Wiederherstellungsschlüssel; danach lässt sich dort ein neuer Passkey anlegen.
 
 ## Deployment
 

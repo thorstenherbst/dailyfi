@@ -7,3 +7,6 @@ export const loadLoginPage = () => import('./lib/login-page').then((m) => m.Logi
 export const loadRegisterPage = () => import('./lib/register-page').then((m) => m.RegisterPage);
 export const loadCallbackPage = () => import('./lib/callback-page').then((m) => m.CallbackPage);
 export const loadConsentPage = () => import('./lib/consent-page').then((m) => m.ConsentPage);
+export const loadVaultSetupPage = () =>
+  import('./lib/vault-setup-page').then((m) => m.VaultSetupPage);
+export const loadUnlockPage = () => import('./lib/unlock-page').then((m) => m.UnlockPage);

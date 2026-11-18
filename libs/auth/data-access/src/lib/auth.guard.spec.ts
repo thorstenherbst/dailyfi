@@ -13,6 +13,7 @@ import { SUPABASE } from '@lib/shared/data-access-supabase';
 import { FakeSupabase } from '@lib/shared/data-access-supabase/testing';
 
 import { DPA_VERSION } from '@lib/legal/domain';
+import { DataKeyHolder } from '@lib/shared/util-crypto';
 
 import {
   dpaPending,
@@ -20,8 +21,12 @@ import {
   inviteCodeOnly,
   requireAccount,
   requireDpa,
+  requireUnlocked,
   safeReturnUrl,
+  vaultLocked,
+  vaultMissing,
 } from './auth.guard';
+import { SessionStore } from './session';
 
 const USER = { id: 'u1', email: 'thorsten@dailyfi.test' };
 
@@ -202,6 +207,85 @@ describe('Route-Guards', () => {
     });
   });
 
+  describe('Datenschluessel (requireUnlocked, vaultMissing, vaultLocked)', () => {
+    const PASSKEY_ROW = {
+      kind: 'passkey',
+      credential_id: 'Y3JlZGVudGlhbC1pZC0x',
+      salt: 'c2FsdA==',
+      iv: 'aXY=',
+      wrapped_key: 'a2V5',
+    };
+    const member = (fake: FakeSupabase): void => {
+      fake.user = USER;
+      fake.betaAccess = true;
+    };
+
+    async function runGuard(
+      guard: CanActivateFn,
+      url = '/week',
+      query: Record<string, string> = {},
+    ): Promise<string | true> {
+      const route = { queryParamMap: convertToParamMap(query) } as ActivatedRouteSnapshot;
+      const result = await TestBed.runInInjectionContext(() =>
+        guard(route, { url } as RouterStateSnapshot),
+      );
+      return result instanceof UrlTree ? TestBed.inject(Router).serializeUrl(result) : true;
+    }
+
+    async function unlock(): Promise<void> {
+      const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, [
+        'encrypt',
+        'decrypt',
+      ]);
+      // Erst die Sitzung: ihr Laden wechselt das Konto und leert den Schluessel.
+      await TestBed.inject(SessionStore).restore();
+      TestBed.inject(DataKeyHolder).set(key);
+    }
+
+    it('schickt beim ersten Mal zum Einrichten', async () => {
+      setup(member);
+      await expect(runGuard(requireUnlocked)).resolves.toBe('/schluessel');
+      await expect(runGuard(vaultMissing)).resolves.toBe(true);
+      await expect(runGuard(vaultLocked)).resolves.toBe('/schluessel');
+    });
+
+    it('schickt mit eingerichtetem Schluessel zum Entsperren, mit Ruecksprung', async () => {
+      setup((fake) => {
+        member(fake);
+        fake.userKeys = [PASSKEY_ROW];
+      });
+      await expect(runGuard(requireUnlocked, '/reports')).resolves.toBe(
+        '/entsperren?returnUrl=%2Freports',
+      );
+      await expect(runGuard(vaultMissing)).resolves.toBe('/entsperren');
+      await expect(runGuard(vaultLocked)).resolves.toBe(true);
+    });
+
+    it('laesst entsperrt durch und fuehrt von den Schluesselseiten weiter', async () => {
+      setup((fake) => {
+        member(fake);
+        fake.userKeys = [PASSKEY_ROW];
+      });
+      await unlock();
+
+      await expect(runGuard(requireUnlocked)).resolves.toBe(true);
+      await expect(runGuard(vaultMissing)).resolves.toBe('/week');
+      await expect(runGuard(vaultLocked, '/entsperren', { returnUrl: '/projects' })).resolves.toBe(
+        '/projects',
+      );
+    });
+
+    it('bietet bei einem Lesefehler kein neues Einrichten an', async () => {
+      // Ein zweiter Schluessel machte die mit dem ersten verschluesselten Daten unlesbar.
+      setup((fake) => {
+        member(fake);
+        fake.userKeysReadError = { message: 'connection reset' };
+      });
+      await expect(runGuard(requireUnlocked)).resolves.toBe('/entsperren?returnUrl=%2Fweek');
+      await expect(runGuard(vaultMissing)).resolves.toBe('/entsperren');
+    });
+  });
+
   describe('safeReturnUrl', () => {
     it('nimmt nur Pfade innerhalb der Anwendung', () => {
       expect(safeReturnUrl('/projects')).toBe('/projects');
@@ -217,10 +301,12 @@ describe('Route-Guards', () => {
       expect(safeReturnUrl('/zustimmung;x=1')).toBe('/week');
       expect(safeReturnUrl('/%7Austimmung')).toBe('/week');
       expect(safeReturnUrl('/zustimmungen')).toBe('/zustimmungen');
-      expect(safeReturnUrl('/zustimmung/')).toBe('/week');
-      expect(safeReturnUrl('/zustimmung;x=1')).toBe('/week');
-      expect(safeReturnUrl('/%7Austimmung')).toBe('/week');
-      expect(safeReturnUrl('/zustimmungen')).toBe('/zustimmungen');
+    });
+
+    it('fuehrt auch nicht zurueck auf Einrichten oder Entsperren', () => {
+      expect(safeReturnUrl('/entsperren?returnUrl=%2Fweek')).toBe('/week');
+      expect(safeReturnUrl('/Entsperren;x')).toBe('/week');
+      expect(safeReturnUrl('/schluessel')).toBe('/week');
     });
   });
 });

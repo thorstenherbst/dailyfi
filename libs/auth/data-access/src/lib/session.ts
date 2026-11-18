@@ -9,6 +9,7 @@ import {
   injectSupabase,
   onRepositoryError,
 } from '@lib/shared/data-access-supabase';
+import { DataKeyHolder } from '@lib/shared/util-crypto';
 
 /** Der angemeldete Nutzer, so weit die Oberflaeche ihn braucht. */
 export interface SessionUser {
@@ -63,6 +64,8 @@ export class SessionStore implements SessionRecovery {
    * Nur lokal in die Konsole schreiben. Fehlt die Konfiguration (Tests), wird
    * geschwiegen — lieber eine Meldung zu wenig als eine zu viel.
    */
+  private readonly dataKey = inject(DataKeyHolder);
+
   private readonly logsAuthIssues =
     inject(SUPABASE_CONFIG, { optional: true })?.production === false;
 
@@ -406,11 +409,13 @@ export class SessionStore implements SessionRecovery {
   private applyUser(raw: { id: string; email?: string | null } | null): void {
     const next: SessionUser | null = raw ? { id: raw.id, email: raw.email ?? '' } : null;
 
-    // Ein anderes Konto heisst: der gepruefte Zugang und die Zustimmung von
-    // vorhin gelten nicht mehr. Abmelden ist der Wechsel zu „niemand".
+    // Ein anderes Konto heisst: der gepruefte Zugang, die Zustimmung und der
+    // Datenschluessel von vorhin gelten nicht mehr. Abmelden ist der Wechsel zu „niemand".
     if (this.currentUser()?.id !== next?.id) {
       this.betaAccess.set(false);
       this.acceptedDpaVersions = new Set();
+      // Der entsperrte Datenschluessel gehoert zum alten Konto.
+      this.dataKey.clear();
     }
     this.currentUser.set(next);
   }

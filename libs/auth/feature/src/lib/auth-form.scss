@@ -44,3 +44,36 @@ form {
   fill: currentColor;
   flex-shrink: 0;
 }
+
+// Wiederherstellungsschluessel: einmal gezeigt, gut lesbar, markierbar.
+.recovery {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+  padding: space(4);
+  border-radius: radius(md);
+  background: var(--surface-sunken);
+}
+
+.recovery-title {
+  font-size: font-size(md);
+}
+
+.recovery-key {
+  font-family: font-family(mono);
+  font-size: font-size(md);
+  line-height: 1.6;
+  letter-spacing: 0.04em;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.recovery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(2);
+}
+
+.actions .btn-secondary {
+  width: 100%;
+}

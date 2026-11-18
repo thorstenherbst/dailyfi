@@ -12,7 +12,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
 
-import { SessionStore } from '@lib/auth/data-access';
+import { GATE_PATHS, SessionStore } from '@lib/auth/data-access';
 import {
   NavItem,
   NavMenu,
@@ -52,11 +52,12 @@ export class App {
    * Menue und Statusleiste nur fuer, wer wirklich in die Anwendung darf. Ohne
    * Freischaltung (Registrierung mit Session) fuehrte jedes Ziel per Guard
    * zurueck auf `/register` — die Seite hat dafuer ihr eigenes „Abmelden".
-   * Dasselbe gilt fuer die Zustimmung zum AV-Vertrag: bis dahin fuehrt jedes
-   * Ziel zurueck auf `/zustimmung`.
+   * Dasselbe gilt fuer die Zustimmung zum AV-Vertrag und den Datenschluessel:
+   * bis dahin fuehrt jedes Ziel zurueck auf `/zustimmung`, `/schluessel` oder
+   * `/entsperren`.
    */
   protected readonly shell = computed(() =>
-    this.session.hasBetaAccess() && pathOf(this.url()) !== '/zustimmung'
+    this.session.hasBetaAccess() && !GATE_PATHS.includes(pathOf(this.url()))
       ? this.session.user()
       : null,
   );
